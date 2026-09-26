@@ -533,6 +533,32 @@ const Stu = {
   }
 };
 
+const DIFF = { 1: 'Recall', 2: 'Understanding', 3: 'Integration' };
+const byTopic = (a, b) => String(a).localeCompare(String(b), undefined, { numeric: true });
+function topicsOf(bank) { const seen = []; bank.forEach(q => { const t = q.topic || '(no topic)'; if (!seen.includes(t)) seen.push(t); }); return seen.sort(byTopic); }
+function diffBadge(q) { return q.difficulty ? h('span', { class: 'badge' + (q.difficulty === 3 ? ' amber' : q.difficulty === 1 ? ' green' : ''), title: 'Difficulty ' + q.difficulty + ' — ' + DIFF[q.difficulty] }, 'D' + q.difficulty) : ''; }
+/** Teacher-only printable answer key of the given exam-bank questions. */
+function printAnswerKey(list, title) {
+  const esc = x => String(x == null ? '' : x).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  const key = q => {
+    if (q.type === 'mcq' || q.type === 'vignette') return '<ol type="A">' + q.options.map((o, i) => '<li' + (i === q.answer ? ' class="ok"' : '') + '>' + esc(o) + (i === q.answer ? ' ✔' : '') + '</li>').join('') + '</ol>';
+    if (q.type === 'selectall') return '<ol type="A">' + q.options.map((o, i) => '<li' + (q.answers.includes(i) ? ' class="ok"' : '') + '>' + esc(o) + (q.answers.includes(i) ? ' ✔' : '') + '</li>').join('') + '</ol>';
+    if (q.type === 'tf') return '<p class="ok">Answer: ' + (q.answer ? 'TRUE' : 'FALSE') + '</p>';
+    if (q.type === 'fillblank') return '<p class="ok">' + q.answers.map((a, i) => 'Blank ' + (i + 1) + ': ' + esc(a.join(' / '))).join('<br>') + '</p>';
+    if (q.type === 'matching') return '<table>' + q.pairs.map(p => '<tr><td>' + esc(p.left) + '</td><td class="ok">→ ' + esc(p.right) + '</td></tr>').join('') + '</table>';
+    return '';
+  };
+  let n = 0, cur = null, body = '';
+  list.forEach(q => {
+    if (q.topic !== cur) { cur = q.topic; body += '<h2>' + esc(cur || '(no topic)') + '</h2>'; }
+    body += '<div class="q"><p><b>' + (++n) + '.</b> <span class="tag">' + esc(TYPE_LABEL[q.type]) + ' · D' + (q.difficulty || '?') + ' · ' + esc(q.id) + '</span></p>' + (q.case ? '<p class="case">' + esc(q.case) + '</p>' : '') + '<p class="stem">' + esc(q.stem) + '</p>' + key(q) + (q.explanation ? '<p class="ex">Explanation: ' + esc(q.explanation) + '</p>' : '') + '</div>';
+  });
+  const w = window.open('', '_blank');
+  if (!w) { toast('Allow pop-ups to print the answer key.', 'warn'); return; }
+  w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + esc(title) + '</title><style>body{font-family:Arial,sans-serif;font-size:11pt;margin:18mm;color:#111}h1{font-size:16pt}h2{font-size:13pt;border-bottom:1px solid #999;margin-top:18pt}.q{page-break-inside:avoid;margin:10pt 0}.tag{color:#666;font-size:9pt}.case{background:#f2f5f8;padding:4pt 6pt}.stem{font-weight:bold}.ok{color:#0a6b33;font-weight:bold}.ex{color:#444;font-size:10pt}table td{padding:2pt 8pt}.conf{color:#b42318;font-weight:bold}</style></head><body><h1>' + esc(title) + '</h1><p class="conf">CONFIDENTIAL — official exam answer key. Do not share with students.</p><p>' + list.length + ' questions · printed ' + new Date().toLocaleString() + '</p>' + body + '</body></html>');
+  w.document.close(); setTimeout(() => w.print(), 400);
+}
+
 /* ==========================================================================
    TEACHER
    ========================================================================== */
@@ -571,7 +597,7 @@ const Teacher = {
     ({ exams: () => this.examsTab(), bank: () => this.bankTab(), results: () => this.resultsTab(), help: () => this.helpTab() })[this.tab]();
   },
   loading(t) { put(this.body, h('p', { class: 'muted' }, t || 'Loading…')); },
-  async loadBank() { const r = await this.call('examBankList'); if (r.ok) this.bank = r.questions || []; return r; },
+  async loadBank() { const r = await this.call('examBankList'); if (r.ok) this.bank = (r.questions || []).sort((x, y) => byTopic(x.topic || '~', y.topic || '~') || (x.addedAt || 0) - (y.addedAt || 0) || byTopic(x.id, y.id)); return r; },
   async loadExams() { const r = await this.call('examList'); if (r.ok) this.exams = r.exams || []; return r; },
   async loadStudents() { if (this.students) return this.students; const r = await this.call('listStudents'); this.students = r.ok ? r.students : []; return this.students; },
 
@@ -629,15 +655,26 @@ const Teacher = {
     const sel = new Set(e.questionIds.filter(id => this.bank.some(q => q.id === id)));
     const qFilter = h('input', { type: 'search', placeholder: 'Filter questions…' });
     const qType = h('select', null, h('option', { value: '' }, 'All types'), Object.keys(TYPE_LABEL).map(k => h('option', { value: k }, TYPE_LABEL[k])));
+    const TOPS = topicsOf(this.bank);
+    const qTopic = h('select', null, h('option', { value: '' }, 'All topics'), TOPS.map(x => h('option', { value: x }, x)));
+    const qDiff = h('select', null, h('option', { value: '' }, 'All levels'), [1, 2, 3].map(k => h('option', { value: String(k) }, 'D' + k + ' — ' + DIFF[k])));
+    const perTopic = h('input', { type: 'number', min: 1, value: 3, style: 'width:70px' });
     const qList = h('div', { class: 'qlist' }), qCount = h('b');
     const paintList = () => {
-      const f = qFilter.value.toLowerCase(), t = qType.value;
-      const rows = this.bank.filter(q => (!t || q.type === t) && (!f || (q.stem + ' ' + (q.topic || '')).toLowerCase().includes(f)));
+      const f = qFilter.value.toLowerCase(), t = qType.value, tpv = qTopic.value, dv = qDiff.value;
+      const rows = this.bank.filter(q => (!t || q.type === t) && (!tpv || (q.topic || '(no topic)') === tpv) && (!dv || String(q.difficulty) === dv) && (!f || (q.stem + ' ' + (q.topic || '')).toLowerCase().includes(f)));
       put(qList, ...(rows.length ? rows.map(q => { const c = h('input', { type: 'checkbox', checked: sel.has(q.id), onchange: () => { if (c.checked) sel.add(q.id); else sel.delete(q.id); qCount.textContent = sel.size; } });
-        return h('label', { class: 'qitem' }, c, h('div', null, h('span', { class: 'badge' }, TYPE_LABEL[q.type]), ' ', q.topic ? h('span', { class: 'tiny muted' }, q.topic + ' · ') : null, q.stem.slice(0, 220))); }) : [h('div', { class: 'qitem muted' }, this.bank.length ? 'No question matches.' : 'The exam bank is empty — add questions in the “Exam question bank” tab first.')]));
+        return h('label', { class: 'qitem' }, c, h('div', null, h('span', { class: 'badge' }, TYPE_LABEL[q.type]), ' ', diffBadge(q), ' ', q.topic ? h('span', { class: 'tiny muted' }, q.topic + ' · ') : null, q.stem.slice(0, 220))); }) : [h('div', { class: 'qitem muted' }, this.bank.length ? 'No question matches.' : 'The exam bank is empty — add questions in the “Exam question bank” tab first.')]));
       qCount.textContent = sel.size;
     };
-    qFilter.addEventListener('input', paintList); qType.addEventListener('change', paintList); paintList();
+    qFilter.addEventListener('input', paintList); [qType, qTopic, qDiff].forEach(x => x.addEventListener('change', paintList)); paintList();
+    const quickPick = () => { // N random questions from EVERY topic (respecting the type/level filters) — a balanced paper
+      const n = Math.max(1, Number(perTopic.value) || 1), t = qType.value, dv = qDiff.value; sel.clear();
+      TOPS.forEach(tp => { const pool = this.bank.filter(q => (q.topic || '(no topic)') === tp && (!t || q.type === t) && (!dv || String(q.difficulty) === dv)).map(q => q.id);
+        for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+        pool.slice(0, n).forEach(id => sel.add(id)); });
+      paintList(); toast(sel.size + ' questions selected (' + n + ' per topic).');
+    };
     const allBtn = h('button', { class: 'btn btn-sm', onclick: () => { qList.querySelectorAll('input').forEach(c => { c.checked = true; c.dispatchEvent(new Event('change')); }); } }, 'Select all shown');
     const noneBtn = h('button', { class: 'btn btn-sm', onclick: () => { qList.querySelectorAll('input').forEach(c => { c.checked = false; c.dispatchEvent(new Event('change')); }); } }, 'Clear shown');
     const msg = h('div', { class: 'msg bad' });
@@ -662,7 +699,8 @@ const Teacher = {
         h('p', { class: 'tiny muted', style: 'margin-top:-6px' }, 'Each student gets the full time from the moment they press Start, but never beyond the closing time.'),
         h('div', { class: 'two' }, h('label', { class: 'f' }, h('span', null, 'Exam access code (announce it in the exam room)'), h('div', { class: 'row', style: 'flex-wrap:nowrap' }, code, h('button', { class: 'btn btn-sm', type: 'button', onclick: gen }, 'New code'))), h('div'))),
       h('div', { class: 'card', style: 'margin-bottom:14px' }, h('h2', null, '2 · Questions'),
-        h('div', { class: 'row', style: 'margin-bottom:8px' }, h('div', { class: 'grow', style: 'min-width:180px' }, qFilter), h('div', { style: 'width:200px' }, qType), allBtn, noneBtn),
+        h('div', { class: 'row', style: 'margin-bottom:8px' }, h('div', { class: 'grow', style: 'min-width:180px' }, qFilter), h('div', { style: 'width:220px' }, qTopic), h('div', { style: 'width:170px' }, qType), h('div', { style: 'width:160px' }, qDiff), allBtn, noneBtn),
+        h('div', { class: 'row small', style: 'margin-bottom:8px' }, 'Balanced paper:', perTopic, 'random question(s) from each topic', h('button', { class: 'btn btn-sm', onclick: quickPick }, 'Select'), h('span', { class: 'tiny muted' }, '(replaces the current selection; uses the type/level filters)')),
         qList, h('div', { class: 'row', style: 'margin-top:10px' }, h('span', null, 'Selected: ', qCount), h('label', { class: 'row small right' }, 'Random questions per student (0 = all selected)', pool)),
         sqL, soL),
       h('div', { class: 'card', style: 'margin-bottom:14px' }, h('h2', null, '3 · Candidates & security'),
@@ -678,24 +716,35 @@ const Teacher = {
   async bankTab() {
     this.loading(); const r = await this.loadBank(); if (!r.ok) return put(this.body, h('div', { class: 'msg bad' }, r.error));
     const f = h('input', { type: 'search', placeholder: 'Search the exam bank…' }), t = h('select', null, h('option', { value: '' }, 'All types'), Object.keys(TYPE_LABEL).map(k => h('option', { value: k }, TYPE_LABEL[k])));
+    const TOP = topicsOf(this.bank);
+    const tp = h('select', null, h('option', { value: '' }, 'All topics'), TOP.map(x => h('option', { value: x }, x)));
+    const df = h('select', null, h('option', { value: '' }, 'All levels'), [1, 2, 3].map(k => h('option', { value: String(k) }, 'D' + k + ' — ' + DIFF[k])));
+    let shown = [];
     const sel = new Set(); const tbody = h('tbody'); const delBtn = h('button', { class: 'btn btn-sm btn-danger', disabled: true }, 'Delete selected');
-    const src = q => q.source && q.source.kind === 'course' ? h('span', { class: 'badge' }, 'course ' + (q.source.origId || '')) : q.source && q.source.kind === 'imported' ? h('span', { class: 'badge' }, 'imported') : h('span', { class: 'badge teal' }, 'exam-only');
+    const src = q => q.source && q.source.kind === 'course' ? h('span', { class: 'badge' }, 'course ' + (q.source.origId || '')) : q.source && q.source.kind === 'imported' ? h('span', { class: 'badge' }, 'imported') : h('span', { class: 'badge teal', title: 'Written only for official exams — never part of Revision' }, 'exam-only');
     const paint = () => {
-      const fv = f.value.toLowerCase(), tv = t.value;
-      const rows = this.bank.filter(q => (!tv || q.type === tv) && (!fv || (q.stem + ' ' + (q.topic || '')).toLowerCase().includes(fv)));
+      const fv = f.value.toLowerCase(), tv = t.value, pv = tp.value, dv = df.value;
+      const rows = shown = this.bank.filter(q => (!tv || q.type === tv) && (!pv || (q.topic || '(no topic)') === pv) && (!dv || String(q.difficulty) === dv) && (!fv || (q.stem + ' ' + (q.case || '') + ' ' + (q.topic || '')).toLowerCase().includes(fv)));
       put(tbody, ...rows.map((q, i) => { const c = h('input', { type: 'checkbox', checked: sel.has(q.id), 'aria-label': 'Select', onchange: () => { if (c.checked) sel.add(q.id); else sel.delete(q.id); delBtn.disabled = !sel.size; delBtn.textContent = 'Delete selected (' + sel.size + ')'; } });
-        return h('tr', null, h('td', null, c), h('td', null, h('span', { class: 'badge' }, TYPE_LABEL[q.type])), h('td', null, q.stem.slice(0, 200), q.image ? ' 🖼' : ''), h('td', { class: 'small muted' }, q.topic || ''), h('td', null, src(q)), h('td', null, h('button', { class: 'btn btn-sm', onclick: () => this.editQuestion(q) }, 'Edit'))); }));
-      if (!rows.length) tbody.append(h('tr', null, h('td', { colspan: 6, class: 'muted' }, this.bank.length ? 'No question matches.' : 'The exam bank is empty. Add questions from the course question bank, write new ones, or import them.')));
+        return h('tr', null, h('td', null, c), h('td', null, h('span', { class: 'badge' }, TYPE_LABEL[q.type])), h('td', null, diffBadge(q)), h('td', null, q.stem.slice(0, 200), q.image ? ' 🖼' : ''), h('td', { class: 'small muted' }, q.topic || ''), h('td', null, src(q)), h('td', null, h('button', { class: 'btn btn-sm', onclick: () => this.editQuestion(q) }, 'Edit'))); }));
+      cntEl.textContent = rows.length + ' shown';
+      if (!rows.length) tbody.append(h('tr', null, h('td', { colspan: 7, class: 'muted' }, this.bank.length ? 'No question matches.' : 'The exam bank is empty. Add questions from the course question bank, write new ones, or import them.')));
     };
-    f.addEventListener('input', paint); t.addEventListener('change', paint);
+    const cntEl = h('span', { class: 'small muted' });
+    f.addEventListener('input', paint); [t, tp, df].forEach(x => x.addEventListener('change', paint));
     delBtn.onclick = async () => { if (!await confirmBox('Delete ' + sel.size + ' question(s)?', 'They are removed from the exam bank. Exams already taken keep their own frozen copy, so results are not affected.', 'Delete', true)) return; const r2 = await this.call('examBankDelete', { ids: Array.from(sel) }); toast(r2.ok ? 'Deleted.' : r2.error, r2.ok ? 'ok' : 'bad'); this.bankTab(); };
     const counts = Object.keys(TYPE_LABEL).map(k => [k, this.bank.filter(q => q.type === k).length]).filter(x => x[1]);
+    const dist = TOP.length ? h('details', { class: 'card', style: 'margin-bottom:14px;padding:14px 18px' }, h('summary', { style: 'cursor:pointer;font-weight:700;color:var(--navy)' }, 'Distribution by topic and difficulty'),
+      h('div', { class: 'tscroll' }, h('table', { class: 't', style: 'margin-top:8px' }, h('thead', null, h('tr', null, h('th', null, 'Topic'), h('th', null, 'D1'), h('th', null, 'D2'), h('th', null, 'D3'), h('th', null, 'Total'))),
+        h('tbody', null, TOP.map(x => { const qs = this.bank.filter(q => (q.topic || '(no topic)') === x); return h('tr', null, h('td', null, x), [1, 2, 3].map(k => h('td', null, qs.filter(q => q.difficulty === k).length || '')), h('td', null, h('b', null, qs.length))); }),
+          h('tr', null, h('td', null, h('b', null, 'All topics')), [1, 2, 3].map(k => h('td', null, h('b', null, this.bank.filter(q => q.difficulty === k).length))), h('td', null, h('b', null, this.bank.length))))))) : null;
     put(this.body, 
       h('div', { class: 'row', style: 'margin-bottom:6px' }, h('h1', { style: 'margin:0' }, 'Exam question bank'), h('span', { class: 'badge navy' }, this.bank.length + ' questions')),
       h('p', { class: 'muted small', style: 'margin-top:0' }, 'Private: these questions and their answers are never sent to students’ browsers except as an answer-free exam paper. ' + counts.map(x => x[1] + ' ' + TYPE_LABEL[x[0]]).join(' · ')),
-      h('div', { class: 'row', style: 'margin:10px 0 14px' }, h('button', { class: 'btn btn-primary', onclick: () => this.pickFromCourse() }, '+ Add from the course question bank'), h('button', { class: 'btn', onclick: () => this.editQuestion(null) }, '+ Write a new question'), h('button', { class: 'btn', onclick: () => this.importJson() }, 'Import (JSON / Claude)')),
-      h('div', { class: 'card' }, h('div', { class: 'row', style: 'margin-bottom:10px' }, h('div', { class: 'grow', style: 'min-width:200px' }, f), h('div', { style: 'width:210px' }, t), delBtn),
-        h('div', { class: 'tscroll' }, h('table', { class: 't' }, h('thead', null, h('tr', null, h('th', null, ''), h('th', null, 'Type'), h('th', null, 'Question'), h('th', null, 'Topic'), h('th', null, 'Source'), h('th', null, ''))), tbody))));
+      h('div', { class: 'row', style: 'margin:10px 0 14px' }, h('button', { class: 'btn btn-primary', onclick: () => this.pickFromCourse() }, '+ Add from the course question bank'), h('button', { class: 'btn', onclick: () => this.editQuestion(null) }, '+ Write a new question'), h('button', { class: 'btn', onclick: () => this.importJson() }, 'Import (file / JSON / Claude)'), h('button', { class: 'btn', onclick: () => printAnswerKey(shown, 'Official exam bank — ' + MOD.title) }, '🖨 Print answer key (shown)')),
+      dist,
+      h('div', { class: 'card' }, h('div', { class: 'row', style: 'margin-bottom:10px' }, h('div', { class: 'grow', style: 'min-width:200px' }, f), h('div', { style: 'width:230px' }, tp), h('div', { style: 'width:170px' }, t), h('div', { style: 'width:160px' }, df), cntEl, delBtn),
+        h('div', { class: 'tscroll' }, h('table', { class: 't' }, h('thead', null, h('tr', null, h('th', null, ''), h('th', null, 'Type'), h('th', null, 'Level'), h('th', null, 'Question'), h('th', null, 'Topic'), h('th', null, 'Source'), h('th', null, ''))), tbody))));
     paint();
   },
   editQuestion(q0) {
@@ -744,14 +793,22 @@ const Teacher = {
     const m = modal('Import exam questions', h('div', null,
       h('p', { class: 'small' }, 'Paste questions in the platform’s JSON format — for example the reply from Claude.ai. Short-answer questions are not accepted in official exams.'),
       h('div', { class: 'row', style: 'margin-bottom:10px' }, h('button', { class: 'btn btn-sm', onclick: async () => { try { await navigator.clipboard.writeText(PROMPT); toast('Prompt copied — paste it into Claude.ai with your syllabus.'); } catch (e) { modal('Prompt for Claude', h('textarea', { style: 'min-height:260px' }, PROMPT)); } } }, '📋 Copy a prompt for Claude.ai')),
-      ta, msg, h('div', { class: 'row', style: 'justify-content:flex-end' }, h('button', { class: 'btn', onclick: () => m.close() }, 'Cancel'), h('button', { class: 'btn btn-primary', onclick: async () => {
+      h('div', { class: 'row', style: 'margin-bottom:10px' }, h('label', { class: 'btn btn-sm', style: 'cursor:pointer' }, '📂 Choose a .json file', h('input', { type: 'file', accept: '.json,application/json', class: 'sr', onchange: async ev => { const fl = ev.target.files[0]; if (fl) { ta.value = await fl.text(); toast(fl.name + ' loaded — press “Add to exam bank”.'); } } })), h('span', { class: 'tiny muted' }, 'or paste below')),
+      ta, msg, h('div', { class: 'row', style: 'justify-content:flex-end' }, h('button', { class: 'btn', onclick: () => m.close() }, 'Cancel'), h('button', { class: 'btn btn-primary', onclick: async ev => {
         let d; const txt = ta.value.trim().replace(/^```(json)?/i, '').replace(/```$/, '');
         try { d = JSON.parse(txt); } catch (e) { msg.textContent = 'This is not valid JSON: ' + e.message; return; }
         const list = Array.isArray(d) ? d : (d && d.questions) || [];
         if (!list.length) { msg.textContent = 'No questions found.'; return; }
-        list.forEach(q => { delete q.id; q.source = { kind: 'new' }; });
-        const r = await this.call('examBankSave', { questions: list }, { timeout: 60000 });
-        if (!r.ok) { msg.textContent = r.error; return; }
+        // ids of the form xq_… are kept, so importing the same file again UPDATES those questions instead of duplicating them
+        list.forEach(q => { if (!/^xq_[a-z0-9]+$/.test(String(q.id || ''))) delete q.id; q.source = q.source && q.source.kind === 'examonly' ? q.source : { kind: 'new' }; });
+        const btn = ev.target; btn.disabled = true;
+        const r = { ok: true, saved: [], errors: [] };
+        for (let i = 0; i < list.length; i += 60) {
+          btn.textContent = 'Saving ' + Math.min(i + 60, list.length) + ' / ' + list.length + '…';
+          const part = await this.call('examBankSave', { questions: list.slice(i, i + 60) }, { timeout: 120000 });
+          if (!part.ok) { msg.textContent = (part.error || 'Save failed.') + (r.saved.length ? ' (' + r.saved.length + ' already saved — import the file again to finish; nothing will be duplicated.)' : ''); btn.disabled = false; btn.textContent = 'Add to exam bank'; return; }
+          r.saved = r.saved.concat(part.saved); r.errors = r.errors.concat(part.errors.map(e => Object.assign(e, { index: e.index + i })));
+        }
         m.close(); this.bankTab();
         modal('Import finished', h('div', null, h('p', null, h('b', null, r.saved.length + ' question(s) added.')), r.errors.length ? h('div', null, h('p', null, r.errors.length + ' not added:'), h('ul', { class: 'small' }, r.errors.map(e => h('li', null, '#' + (e.index + 1) + ' “' + e.stem + '” — ' + e.error)))) : null));
       } }, 'Add to exam bank'))), { wide: true });
@@ -785,7 +842,7 @@ const Teacher = {
       box.append(h('label', { class: 'f' }, h('span', null, 'Teaching platform link'), inp), h('button', { class: 'btn', onclick: () => { localStorage.setItem('xm_course_' + BASE, inp.value.trim()); m.close(); this.pickFromCourse(); } }, 'Save link and retry'));
       return;
     }
-    const topics = {}; (data.topics || []).forEach(t => { topics[t.id] = t.title; });
+    const topics = {}; (data.topics || []).forEach(t => { topics[t.id] = (t.num ? String(t.num).padStart(2, '0') + ' · ' : '') + t.title; }); // same labels as the official exam bank files
     const inBank = new Set(this.bank.map(q => q.source && q.source.origId).filter(Boolean));
     const qs = data.questions.map(q => Object.assign({}, q, { _kind: 'course' })).concat(extra.map(q => Object.assign({}, q, { _kind: 'imported' })));
     const usable = qs.filter(q => TYPE_LABEL[q.type]);
