@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Official Exam — Department of Pathology</title>
+<style>
+:root{--navy:#0b2a4a;--navy2:#14385e;--teal:#0e9f9a;--teal-d:#0b7f7b;--teal-l:#e3f5f3;--ink:#172433;--muted:#5d7085;--line:#d8e1ea;--bg:#f3f6f9;--card:#fff;--red:#b42318;--red-l:#fdecec;--amber:#b45309;--amber-l:#fff4e0;--green:#166534;--green-l:#e8f7ee;--radius:14px}
+*{box-sizing:border-box}html,body{margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:var(--ink);background:var(--bg);font-size:16px;line-height:1.5}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--teal-d)}
+.hidden{display:none!important}
+.muted{color:var(--muted)}.small{font-size:.86rem}.tiny{font-size:.78rem}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.grow{flex:1}.right{margin-left:auto}
+.btn{white-space:nowrap;border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:9px 16px;font-weight:650;display:inline-flex;align-items:center;gap:6px;min-height:42px}
+.btn:hover{border-color:#b9c7d6}.btn:disabled{opacity:.55;cursor:not-allowed}
+.btn-primary{background:var(--teal);border-color:var(--teal);color:#fff}.btn-primary:hover{background:var(--teal-d);border-color:var(--teal-d)}
+.btn-navy{background:var(--navy);border-color:var(--navy);color:#fff}
+.btn-danger{border-color:#f0b4ae;color:var(--red)}.btn-danger:hover{background:var(--red-l)}
+.btn-sm{padding:5px 11px;min-height:34px;font-size:.88rem;border-radius:8px}
+.btn-link{background:none;border:0;color:var(--teal-d);font-weight:650;padding:4px}
+input[type=text],input[type=password],input[type=number],input[type=datetime-local],input[type=search],select,textarea{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;background:#fff}
+input,select,textarea{font-weight:400}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(14,159,154,.18)}
+textarea{min-height:90px;resize:vertical}
+label.f{display:block;margin-bottom:14px;font-weight:650;font-size:.92rem}label.f>span{display:block;margin-bottom:5px}
+label.chk{display:flex;gap:9px;align-items:flex-start;margin:8px 0;font-size:.94rem}label.chk input{margin-top:4px;width:18px;height:18px;flex:none}
+.msg{border-radius:10px;padding:10px 12px;margin:10px 0;font-size:.92rem}.msg:empty{display:none}
+.msg.bad{background:var(--red-l);color:var(--red)}.msg.ok{background:var(--green-l);color:var(--green)}.msg.info{background:#e8f1fb;color:#1d4f73}.msg.warn{background:var(--amber-l);color:var(--amber)}
+.badge{display:inline-block;border-radius:999px;padding:2px 10px;font-size:.78rem;font-weight:700;background:#eef2f6;color:#3d5268;white-space:nowrap}
+.badge.teal{background:var(--teal-l);color:var(--teal-d)}.badge.red{background:var(--red-l);color:var(--red)}.badge.amber{background:var(--amber-l);color:var(--amber)}.badge.green{background:var(--green-l);color:var(--green)}.badge.navy{background:var(--navy);color:#fff}
+.card{background:var(--card);border-radius:var(--radius);box-shadow:0 1px 2px rgba(16,40,70,.06),0 4px 18px rgba(16,40,70,.06);padding:22px}
+/* gate / centered screens */
+.gate{min-height:100vh;display:grid;place-items:center;padding:24px 16px;background:linear-gradient(160deg,#0b2a4a,#0e6f78)}
+.gate .card{width:100%;max-width:440px}
+.brand{display:flex;gap:12px;align-items:center;margin-bottom:18px}
+.brand .mark{width:52px;height:52px;border-radius:14px;background:var(--teal-l);display:grid;place-items:center;flex:none}
+.brand .mark svg{width:28px;height:28px;color:var(--teal-d)}
+.brand .t1{font-weight:800;font-size:1.12rem;color:var(--navy)}.brand .t2{font-size:.84rem;color:var(--muted)}
+h1,h2,h3{color:var(--navy);line-height:1.25}h1{font-size:1.45rem;margin:0 0 6px}h2{font-size:1.2rem;margin:0 0 10px}h3{font-size:1.02rem;margin:0 0 8px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:16px 0}
+.fact{background:var(--bg);border-radius:11px;padding:11px 13px}.fact b{display:block;font-size:1.15rem;color:var(--navy)}.fact span{font-size:.8rem;color:var(--muted)}
+.instr{white-space:pre-wrap;background:#f8fafc;border:1px solid var(--line);border-radius:11px;padding:12px 14px;font-size:.94rem}
+/* exam screen */
+.xbar{position:sticky;top:0;z-index:20;background:var(--navy);color:#fff;padding:10px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.xbar .ttl{font-weight:750}.xbar .who{font-size:.84rem;opacity:.85}
+.timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:1.25rem;background:rgba(255,255,255,.12);border-radius:10px;padding:5px 12px;min-width:104px;text-align:center}
+.timer.warn{background:#b45309}.timer.crit{background:#b42318;animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.75}}
+.save{font-size:.82rem;border-radius:999px;padding:3px 10px;background:rgba(255,255,255,.12)}.save.bad{background:#b42318}
+.xwrap{max-width:1100px;margin:0 auto;padding:18px 16px 90px;display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:18px}
+@media(max-width:860px){.xwrap{grid-template-columns:minmax(0,1fr)}.nav-panel .card{position:static}}
+.qcard{background:#fff;border-radius:var(--radius);box-shadow:0 1px 2px rgba(16,40,70,.06),0 4px 18px rgba(16,40,70,.06);padding:22px;user-select:none;-webkit-user-select:none}
+.qhead{display:flex;align-items:center;gap:8px 10px;margin-bottom:12px;flex-wrap:wrap}.qnum{font-weight:800;color:var(--navy)}
+.case{background:#f4f8fb;border-left:0;border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:.96rem}
+.stem{font-size:1.08rem;font-weight:600;margin-bottom:16px;white-space:pre-wrap}
+.qimg{max-width:100%;max-height:360px;border-radius:10px;border:1px solid var(--line);margin:0 0 14px;cursor:zoom-in;display:block}
+.opts{display:flex;flex-direction:column;gap:9px}
+.opt{display:flex;gap:12px;align-items:flex-start;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff;text-align:left;width:100%}
+.opt:hover{border-color:#aebfd0}.opt.sel{border-color:var(--teal);background:var(--teal-l)}
+.opt .let{flex:none;width:28px;height:28px;border-radius:50%;background:#eef2f6;display:grid;place-items:center;font-weight:800;font-size:.86rem}
+.opt.sel .let{background:var(--teal);color:#fff}
+.opt .box{flex:none;width:22px;height:22px;border-radius:6px;border:2px solid #9fb1c3;display:grid;place-items:center;margin-top:3px}
+.opt.sel .box{background:var(--teal);border-color:var(--teal);color:#fff}
+.tfrow{display:flex;gap:12px}.tfrow .opt{justify-content:center;font-weight:750;font-size:1.05rem}
+.blank{display:inline-block;width:auto;min-width:160px;max-width:100%;margin:2px 4px;padding:6px 10px}
+.mrow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid #edf1f5}
+@media(max-width:560px){.mrow{grid-template-columns:minmax(0,1fr)}}
+.qfoot{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+.nav-panel .card{padding:16px;position:sticky;top:76px}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin:10px 0}
+.gbtn{position:relative;border:1.5px solid var(--line);background:#fff;border-radius:9px;height:38px;font-weight:700;font-size:.9rem}
+.gbtn.ans{background:var(--teal-l);border-color:#9fd9d4;color:var(--teal-d)}.gbtn.cur{outline:2.5px solid var(--navy);outline-offset:1px}
+.gbtn.flag::after{content:"";position:absolute;top:3px;right:3px;width:8px;height:8px;border-radius:50%;background:#f59e0b}
+.legend{display:flex;gap:10px;flex-wrap:wrap;font-size:.76rem;color:var(--muted)}.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.warnbar{background:var(--amber-l);color:var(--amber);font-size:.88rem;padding:8px 16px;text-align:center}
+.done-ic{width:68px;height:68px;border-radius:50%;background:var(--green-l);color:var(--green);display:grid;place-items:center;margin:0 auto 12px}
+.done-ic svg{width:36px;height:36px}
+/* teacher */
+.tbar{background:var(--navy);color:#fff;padding:0 16px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-height:58px}
+.tbar .ttl{font-weight:800;margin-right:14px}
+.tab{background:none;border:0;color:#c7d6e6;font-weight:700;padding:18px 12px;border-bottom:3px solid transparent}.tab.on{color:#fff;border-bottom-color:var(--teal)}
+.twrap{max-width:1180px;margin:0 auto;padding:20px 16px 60px}
+table.t{width:100%;border-collapse:collapse;font-size:.9rem}
+table.t th{text-align:left;font-size:.76rem;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);border-bottom:2px solid var(--line);padding:9px 8px;white-space:nowrap}
+table.t td{border-bottom:1px solid #edf1f5;padding:9px 8px;vertical-align:top}
+table.t tr:hover td{background:#fafcfd}
+.tscroll{overflow-x:auto}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:14px 0}
+.kpi{background:#fff;border-radius:12px;padding:12px 14px;box-shadow:0 1px 2px rgba(16,40,70,.06)}.kpi b{display:block;font-size:1.45rem;color:var(--navy)}.kpi span{font-size:.78rem;color:var(--muted)}
+.excard{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;margin-bottom:12px}
+@media(max-width:700px){.excard{grid-template-columns:minmax(0,1fr)}}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}@media(max-width:700px){.two{grid-template-columns:minmax(0,1fr)}}
+.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}@media(max-width:700px){.three{grid-template-columns:minmax(0,1fr)}}
+.qlist{max-height:420px;overflow:auto;border:1.5px solid var(--line);border-radius:11px}
+.qitem{display:flex;gap:10px;align-items:flex-start;padding:9px 12px;border-bottom:1px solid #edf1f5;font-size:.9rem}.qitem:last-child{border-bottom:0}
+.qitem input{margin-top:4px;width:17px;height:17px;flex:none}
+.modal-bg{position:fixed;inset:0;background:rgba(10,25,40,.55);display:grid;place-items:center;padding:16px;z-index:100}
+.modal{background:#fff;border-radius:16px;width:100%;max-width:760px;max-height:92vh;overflow:auto;padding:22px;box-shadow:0 20px 50px rgba(0,0,0,.3)}
+.modal.wide{max-width:1000px}
+.ans-ok{color:var(--green);font-weight:700}.ans-bad{color:var(--red);font-weight:700}
+.dq{border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
+.dq .o{padding:4px 8px;border-radius:7px;margin:3px 0}.dq .o.c{background:var(--green-l)}.dq .o.w{background:var(--red-l)}
+.zoom{position:fixed;inset:0;background:rgba(0,0,0,.85);display:grid;place-items:center;z-index:200;cursor:zoom-out}.zoom img{max-width:95vw;max-height:92vh}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* ==========================================================================
+   Official Exam App (v1.0) — Department of Pathology
+   A separate application: it contains NO course content, NO question bank and
+   NO answer keys. Everything is served, timed and graded by the backend
+   (Google Apps Script, Code.gs ≥ 1.7). The student paper arrives without answers,
+   explanations, question ids or original option positions.
+   ========================================================================== */
+'use strict';
+const CONFIG = {
+  backendUrl: 'https://script.google.com/macros/s/AKfycbzx0Yg0YAaJ8mAvcHoondUmlS-DtZTjrvnLvcAE-tNSF3McBcV-znF0-S8PV54_XrM/exec',
+  defaultModule: 'inflhealing',
+  modules: {
+    inflhealing: { title: 'Inflammation & Healing', courseUrl: 'https://third-year-med.github.io/inflammation-healing/' },
+    cellinjury: { title: 'Cell Injury & Cell Death', courseUrl: 'https://third-year-med.github.io/cell-injury-teaching-platform/' }
+  },
+  department: 'Department of Pathology',
+  author: 'Dr. Wesam Alzwawy'
+};
+const QS = new URLSearchParams(location.search);
+const MODULE = (QS.get('m') || CONFIG.defaultModule).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 40) || CONFIG.defaultModule;
+const BASE = MODULE.split('-')[0];
+const MOD = CONFIG.modules[BASE] || { title: MODULE, courseUrl: '' };
+const BACKEND = (window.EXAM_BACKEND_URL || CONFIG.backendUrl);
+const TYPE_LABEL = { mcq: 'Single best answer', vignette: 'Clinical vignette', tf: 'True / False', selectall: 'Select all that apply', fillblank: 'Fill in the blank', matching: 'Matching' };
+const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+/* ---------- tiny helpers ---------- */
+function h(tag, attrs, ...kids) {
+  const e = document.createElement(tag);
+  if (attrs) for (const k in attrs) {
+    const v = attrs[k]; if (v === null || v === undefined || v === false) continue;
+    if (k === 'class') e.className = v; else if (k === 'style') e.style.cssText = v;
+    else if (k.startsWith('on') && typeof v === 'function') e.addEventListener(k.slice(2), v);
+    else if (k === 'html') e.innerHTML = v;
+    else if (k in e && typeof v !== 'string') e[k] = v; else e.setAttribute(k, v === true ? '' : v);
+  }
+  for (const c of kids.flat(9)) if (c !== null && c !== undefined && c !== false) e.append(c instanceof Node ? c : document.createTextNode(String(c)));
+  return e;
+}
+const $ = s => document.querySelector(s);
+const app = () => document.getElementById('app');
+function kids(list) { return list.flat(9).filter(x => x !== null && x !== undefined && x !== false).map(x => x instanceof Node ? x : document.createTextNode(String(x))); }
+function put(el, ...k) { el.replaceChildren(...kids(k)); }
+function mount(...nodes) { put(app(), nodes); window.scrollTo(0, 0); }
+function fmtDT(ms) { if (!ms) return '—'; const d = new Date(ms); return d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) + ' ' + d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }); }
+function fmtT(ms) { return ms ? new Date(ms).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) : '—'; }
+function fmtDur(ms) { if (ms == null || ms < 0) return '—'; const m = Math.round(ms / 60000); return m < 60 ? m + ' min' : Math.floor(m / 60) + ' h ' + (m % 60) + ' min'; }
+function clock(ms) { ms = Math.max(0, ms); const s = Math.floor(ms / 1000), hh = Math.floor(s / 3600), mm = Math.floor(s % 3600 / 60), ss = s % 60; return (hh ? hh + ':' + String(mm).padStart(2, '0') : String(mm).padStart(2, '0')) + ':' + String(ss).padStart(2, '0'); }
+const ICON = {
+  micro: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18h8"/><path d="M3 22h18"/><path d="M14 22a7 7 0 1 0 0-14h-1"/><path d="M9 14h2"/><path d="M9 12a2 2 0 0 1-2-2V6h6v4a2 2 0 0 1-2 2Z"/><path d="M12 6V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+  lock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>'
+};
+function brand(sub) {
+  return h('div', { class: 'brand' }, h('div', { class: 'mark', html: ICON.micro }),
+    h('div', null, h('div', { class: 't1' }, 'Official Exam'), h('div', { class: 't2' }, sub || (MOD.title + ' · ' + CONFIG.department))));
+}
+function toast(text, kind) {
+  const t = h('div', { class: 'msg ' + (kind || 'ok'), style: 'position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:300;box-shadow:0 6px 20px rgba(0,0,0,.2);max-width:92vw' }, text);
+  document.body.append(t); setTimeout(() => t.remove(), 3500);
+}
+function modal(title, body, opts) {
+  const o = opts || {};
+  const close = () => { bg.remove(); document.removeEventListener('keydown', esc); if (o.onClose) o.onClose(); };
+  const esc = e => { if (e.key === 'Escape' && !o.noEsc) close(); };
+  const bg = h('div', { class: 'modal-bg', onclick: e => { if (e.target === bg && !o.noEsc) close(); } },
+    h('div', { class: 'modal' + (o.wide ? ' wide' : ''), role: 'dialog', 'aria-modal': 'true', 'aria-label': title },
+      h('div', { class: 'row', style: 'margin-bottom:10px' }, h('h2', { style: 'margin:0' }, title), o.noEsc ? null : h('button', { class: 'btn btn-sm right', onclick: close, 'aria-label': 'Close' }, '✕')), body));
+  document.body.append(bg); document.addEventListener('keydown', esc);
+  const f = bg.querySelector('input,textarea,select,button.btn-primary'); if (f) setTimeout(() => f.focus(), 30);
+  return { close, el: bg };
+}
+function confirmBox(title, text, okLabel, danger) {
+  return new Promise(res => {
+    let done = false;
+    const m = modal(title, h('div', null, h('p', null, text), h('div', { class: 'row', style: 'justify-content:flex-end;margin-top:16px' },
+      h('button', { class: 'btn', onclick: () => { done = true; m.close(); res(false); } }, 'Cancel'),
+      h('button', { class: 'btn ' + (danger ? 'btn-danger' : 'btn-primary'), onclick: () => { done = true; m.close(); res(true); } }, okLabel || 'OK'))), { onClose: () => { if (!done) res(false); } });
+  });
+}
+function zoomImg(src) { const z = h('div', { class: 'zoom', onclick: () => z.remove() }, h('img', { src, alt: 'Enlarged image' })); document.body.append(z); }
+
+/* ---------- backend ---------- */
+const API = {
+  async call(action, payload, opts) {
+    const o = opts || {}, ctrl = new AbortController(), t = setTimeout(() => ctrl.abort(), o.timeout || 30000);
+    try {
+      const r = await fetch(BACKEND, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(Object.assign({ module: MODULE, action }, payload || {})), signal: ctrl.signal, redirect: 'follow' });
+      const j = await r.json();
+      return j || { ok: false, error: 'Empty answer from the server.' };
+    } catch (e) {
+      return { ok: false, network: true, error: e.name === 'AbortError' ? 'The server did not answer in time. Check the connection and try again.' : 'Cannot reach the exam server. Check the internet connection.' };
+    } finally { clearTimeout(t); }
+  }
+};
+const SS = {
+  get(k, d) { try { const v = sessionStorage.getItem('xm_' + MODULE + '_' + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { sessionStorage.setItem('xm_' + MODULE + '_' + k, JSON.stringify(v)); } catch (e) { } },
+  del(k) { try { sessionStorage.removeItem('xm_' + MODULE + '_' + k); } catch (e) { } }
+};
+
+/* ==========================================================================
+   STUDENT
+   ========================================================================== */
+const Stu = {
+  s: null,                // { etoken, student, exam }
+  paper: null, resp: {}, flags: {}, cur: 0,
+  attempt: null, offset: 0, dirty: false, saving: false, lastSaved: 0, saveErr: '', leaves: 0, submitting: false, timerId: null, saveId: null, pollId: null,
+
+  start() {
+    const s = SS.get('sess', null);
+    if (!(s && s.etoken)) return this.loginView();
+    this.s = s; this.leaves = SS.get('leaves', 0);
+    if (SS.get('started', false)) return this.resume();
+    API.call('examStatus', { etoken: s.etoken }).then(r => {   // refreshed in the lobby: never start the timer without the Start button
+      if (!r.ok) { this.clear(); return this.loginView(r.code === 'examauth' ? 'Please sign in again.' : r.error, 'info'); }
+      this.offset = r.exam.serverTime - Date.now();
+      if (r.attempt && r.attempt.status === 'submitted') return this.doneView(r.attempt);
+      if (r.attempt) { SS.set('started', true); return this.resume(); }
+      this.lobby(r.exam);
+    });
+  },
+  loginView(msg, kind) {
+    const code = h('input', { type: 'text', id: 'x-code', autocomplete: 'off', autocapitalize: 'characters', spellcheck: false, placeholder: 'Given by the invigilator' });
+    const user = h('input', { type: 'text', id: 'x-user', autocomplete: 'username', spellcheck: false, placeholder: 'Your student ID' });
+    const pw = h('input', { type: 'password', id: 'x-pw', autocomplete: 'current-password', placeholder: 'Your password' });
+    const m = h('div', { class: 'msg ' + (kind || 'bad'), role: 'alert' }, msg || '');
+    const btn = h('button', { class: 'btn btn-primary', type: 'submit', style: 'width:100%;justify-content:center' }, 'Enter the exam');
+    const form = h('form', { onsubmit: async e => {
+      e.preventDefault(); m.className = 'msg bad'; m.textContent = '';
+      if (!code.value.trim() || !user.value.trim() || !pw.value) { m.textContent = 'Enter the exam code, your student ID and your password.'; return; }
+      btn.disabled = true; btn.textContent = 'Checking…';
+      const r = await API.call('examLogin', { code: code.value.trim(), username: user.value.trim(), password: pw.value });
+      btn.disabled = false; btn.textContent = 'Enter the exam';
+      if (!r.ok) { m.textContent = r.error || 'Sign-in failed.'; pw.value = ''; pw.focus(); return; }
+      this.s = { etoken: r.etoken, student: r.student, exam: r.exam };
+      SS.set('sess', this.s); SS.set('leaves', 0); this.leaves = 0;
+      this.offset = (r.exam.serverTime || Date.now()) - Date.now();
+      if (r.attempt && r.attempt.status === 'submitted') return this.doneView(r.attempt);
+      if (r.attempt && r.attempt.status === 'in_progress') { SS.set('started', true); return this.resume(); }
+      this.lobby(r.exam);
+    } },
+      h('label', { class: 'f' }, h('span', null, 'Exam access code'), code),
+      h('label', { class: 'f' }, h('span', null, 'Student ID'), user),
+      h('label', { class: 'f' }, h('span', null, 'Password'), pw), m, btn);
+    mount(h('div', { class: 'gate' }, h('div', { class: 'card' }, brand(), h('h1', null, 'Sign in to your exam'),
+      h('p', { class: 'muted small', style: 'margin-top:0' }, 'Use the same student ID and password as the teaching platform. The exam code is announced in the exam room.'),
+      form,
+      h('p', { class: 'tiny muted', style: 'margin:16px 0 0;display:flex;gap:6px;align-items:flex-start' }, h('span', { html: ICON.lock, style: 'width:14px;flex:none' }), 'This exam page is separate from the teaching platform. While the exam is running, the teaching material is closed for candidates.'),
+      h('div', { style: 'text-align:right;margin-top:10px' }, h('button', { class: 'btn-link tiny', type: 'button', onclick: () => Teacher.loginView() }, 'Teacher sign-in')))));
+    setTimeout(() => (code.value ? user : code).focus(), 30);
+  },
+  lobby(exam) {
+    this.s.exam = exam; SS.set('sess', this.s);
+    const e = exam, now = Date.now() + this.offset;
+    const status = h('div', { class: 'msg info' });
+    const startBtn = h('button', { class: 'btn btn-primary', style: 'min-width:220px;justify-content:center' }, 'Start the exam');
+    const upd = () => {
+      const n = Date.now() + this.offset;
+      if (e.state === 'notyet' || n < e.opensAt) { startBtn.disabled = true; status.className = 'msg info'; status.textContent = 'The exam opens at ' + fmtT(e.opensAt) + ' — in ' + clock(e.opensAt - n) + '. This page will unlock by itself.'; }
+      else if (e.state === 'closed' || (e.closesAt && n > e.closesAt)) { startBtn.disabled = true; status.className = 'msg bad'; status.textContent = 'This exam is closed.'; }
+      else { startBtn.disabled = false; status.className = 'msg ok'; status.textContent = 'The exam is open. The timer starts when you press “Start the exam”.'; }
+    };
+    startBtn.onclick = async () => {
+      const ok = await confirmBox('Start the exam?', 'Your timer (' + e.durationMin + ' minutes) starts now and cannot be paused. You have one attempt.', 'Start now');
+      if (!ok) return;
+      startBtn.disabled = true; startBtn.textContent = 'Preparing your paper…';
+      SS.set('started', true);
+      try { if (document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen(); } catch (err) { }
+      await this.resume(true);
+      startBtn.textContent = 'Start the exam'; upd();
+    };
+    upd(); clearInterval(this.pollId);
+    this.pollId = setInterval(async () => {
+      if (!document.body.contains(startBtn)) { clearInterval(this.pollId); return; }
+      upd();
+      if (e.state === 'notyet' && Date.now() + this.offset >= e.opensAt) {
+        const r = await API.call('examStatus', { etoken: this.s.etoken });
+        if (r.ok) { Object.assign(e, r.exam); this.offset = r.exam.serverTime - Date.now(); upd(); }
+      }
+    }, 1000);
+    mount(h('div', { class: 'gate' }, h('div', { class: 'card', style: 'max-width:640px' }, brand(),
+      h('h1', null, e.title),
+      h('p', { class: 'muted', style: 'margin:0' }, 'Candidate: ', h('b', null, this.s.student.name), ' · ID ', h('b', null, this.s.student.username)),
+      h('div', { class: 'facts' },
+        h('div', { class: 'fact' }, h('b', null, e.questionCount), h('span', null, 'questions')),
+        h('div', { class: 'fact' }, h('b', null, e.durationMin + ' min'), h('span', null, 'time allowed')),
+        h('div', { class: 'fact' }, h('b', null, fmtT(e.opensAt) + '–' + fmtT(e.closesAt)), h('span', null, 'exam window'))),
+      e.instructions ? h('div', null, h('h3', null, 'Instructions'), h('div', { class: 'instr' }, e.instructions)) : null,
+      h('ul', { class: 'small muted', style: 'padding-left:18px' },
+        h('li', null, 'Your answers are saved to the server automatically as you work.'),
+        h('li', null, 'When the time is over, your saved answers are submitted automatically.'),
+        h('li', null, 'Leaving this window is recorded and reported to the examiner.')),
+      status, h('div', { class: 'row', style: 'justify-content:space-between;margin-top:8px' },
+        h('button', { class: 'btn', onclick: () => this.signOut() }, 'Sign out'), startBtn))));
+  },
+  async resume(fromStart) {
+    const r = await API.call('examStart', { etoken: this.s.etoken }, { timeout: 45000 });
+    if (!r.ok) {
+      if (r.code === 'examauth' || r.code === 'examgone') { this.clear(); return this.loginView(r.error); }
+      if (r.code === 'window' && !fromStart) return this.lobby(this.s.exam);
+      if (fromStart) { toast(r.error || 'Could not start the exam.', 'bad'); return; }
+      return this.loginView(r.error || 'Could not load the exam.');
+    }
+    this.offset = (r.attempt.serverTime || Date.now()) - Date.now();
+    this.s.exam = r.exam; SS.set('sess', this.s);
+    if (r.attempt.status === 'submitted' || !r.paper) return this.doneView(r.attempt);
+    this.attempt = r.attempt; this.paper = r.paper;
+    const local = SS.get('resp', null);
+    this.resp = Object.assign({}, r.responses || {}, local && local.etoken === this.s.etoken ? local.resp : {});
+    this.flags = SS.get('flags', {});
+    this.cur = Math.min(SS.get('cur', 0), this.paper.length - 1);
+    this.dirty = !!(local && local.etoken === this.s.etoken && JSON.stringify(local.resp) !== JSON.stringify(r.responses || {}));
+    this.examView();
+  },
+
+  /* ---------------- the exam itself ---------------- */
+  answered(i) {
+    const r = this.resp[i], q = this.paper[i];
+    if (r === undefined || r === null) return false;
+    if (q.type === 'selectall') return Array.isArray(r) && r.length > 0;
+    if (q.type === 'fillblank') return Array.isArray(r) && r.some(x => String(x || '').trim());
+    if (q.type === 'matching') return r && Object.keys(r).length > 0;
+    return true;
+  },
+  setResp(i, v) {
+    if (v === undefined) delete this.resp[i]; else this.resp[i] = v;
+    this.dirty = true; SS.set('resp', { etoken: this.s.etoken, resp: this.resp });
+    this.paintNav(); this.scheduleSave(3000);
+  },
+  examView() {
+    clearInterval(this.pollId);
+    this.timerEl = h('div', { class: 'timer', role: 'timer', 'aria-live': 'off' }, '--:--');
+    this.saveEl = h('span', { class: 'save' }, 'All answers saved');
+    this.warnEl = h('div', { class: 'warnbar hidden', role: 'status' });
+    this.navGrid = h('div', { class: 'grid' });
+    this.progEl = h('div', { class: 'small muted' });
+    this.qBox = h('div');
+    mount(
+      h('div', { class: 'xbar' }, h('div', { class: 'grow' }, h('div', { class: 'ttl' }, this.s.exam.title), h('div', { class: 'who' }, this.s.student.name + ' · ' + this.s.student.username)),
+        this.saveEl, this.timerEl),
+      this.warnEl,
+      h('div', { class: 'xwrap' }, h('main', null, this.qBox),
+        h('aside', { class: 'nav-panel' }, h('div', { class: 'card' }, h('h3', { style: 'margin:0' }, 'Questions'), this.progEl, this.navGrid,
+          h('div', { class: 'legend' }, h('span', null, h('i', { style: 'background:var(--teal-l);border:1px solid #9fd9d4' }), 'answered'), h('span', null, h('i', { style: 'background:#f59e0b;border-radius:50%' }), 'flagged')),
+          h('button', { class: 'btn btn-navy', style: 'width:100%;justify-content:center;margin-top:14px', onclick: () => this.review() }, 'Review & submit')))));
+    this.paintQ(); this.paintNav(); this.tick();
+    clearInterval(this.timerId); this.timerId = setInterval(() => this.tick(), 500);
+    clearInterval(this.saveId); this.saveId = setInterval(() => { if (this.dirty) this.save(); }, 20000);
+    if (this.dirty) this.scheduleSave(500);
+    this.guards(true);
+  },
+  paintNav() {
+    if (!this.navGrid) return;
+    const n = this.paper.length, a = this.paper.filter((_, i) => this.answered(i)).length;
+    this.progEl.textContent = a + ' of ' + n + ' answered';
+    put(this.navGrid, ...this.paper.map((q, i) => h('button', { class: 'gbtn' + (this.answered(i) ? ' ans' : '') + (this.flags[i] ? ' flag' : '') + (i === this.cur ? ' cur' : ''),
+      'aria-label': 'Question ' + (i + 1) + (this.answered(i) ? ', answered' : ', not answered') + (this.flags[i] ? ', flagged' : ''), onclick: () => this.go(i) }, i + 1)));
+  },
+  go(i) { this.cur = Math.max(0, Math.min(this.paper.length - 1, i)); SS.set('cur', this.cur); this.paintQ(); this.paintNav(); window.scrollTo({ top: 0, behavior: 'instant' }); },
+  paintQ() {
+    const i = this.cur, q = this.paper[i], r = this.resp[i];
+    const body = [];
+    if (q.case) body.push(h('div', { class: 'case' }, h('b', null, 'Case: '), q.case));
+    if (q.image) body.push(h('img', { class: 'qimg', src: q.image, alt: 'Question image — click to enlarge', onclick: () => zoomImg(q.image) }));
+    if (q.type === 'fillblank') {
+      const parts = String(q.stem).split(/_{3,}/), vals = Array.isArray(r) ? r.slice() : [];
+      const inputs = [];
+      const mk = k => { const inp = h('input', { type: 'text', class: 'blank', value: vals[k] || '', autocomplete: 'off', spellcheck: false, 'aria-label': 'Blank ' + (k + 1) });
+        inp.addEventListener('input', () => { vals[k] = inp.value; const any = vals.some(x => String(x || '').trim()); this.setResp(i, any ? Array.from({ length: q.blanks }, (_, j) => vals[j] || '') : undefined); }); inputs.push(inp); return inp; };
+      const stem = h('div', { class: 'stem' });
+      parts.forEach((p, k) => { stem.append(p); if (k < parts.length - 1 && k < q.blanks) stem.append(mk(k)); });
+      body.push(stem);
+      for (let k = parts.length - 1; k < q.blanks; k++) body.push(h('div', { style: 'margin:6px 0' }, 'Answer ' + (k + 1) + ': ', mk(k)));
+    } else body.push(h('div', { class: 'stem' }, q.stem));
+    if (q.type === 'mcq' || q.type === 'vignette') body.push(h('div', { class: 'opts', role: 'radiogroup' }, q.options.map((o, k) =>
+      h('button', { class: 'opt' + (r === k ? ' sel' : ''), role: 'radio', 'aria-checked': r === k ? 'true' : 'false', onclick: () => { this.setResp(i, r === k ? undefined : k); this.paintQ(); } },
+        h('span', { class: 'let' }, LETTERS[k]), h('span', null, o)))));
+    if (q.type === 'selectall') { const cur = Array.isArray(r) ? r : []; body.push(h('p', { class: 'small muted', style: 'margin-top:-6px' }, 'Select every correct option.'), h('div', { class: 'opts' }, q.options.map((o, k) =>
+      h('button', { class: 'opt' + (cur.includes(k) ? ' sel' : ''), role: 'checkbox', 'aria-checked': cur.includes(k) ? 'true' : 'false', onclick: () => { const nx = cur.includes(k) ? cur.filter(x => x !== k) : cur.concat(k).sort((a, b) => a - b); this.setResp(i, nx.length ? nx : undefined); this.paintQ(); } },
+        h('span', { class: 'box', html: cur.includes(k) ? ICON.check : '' }), h('span', null, LETTERS[k] + '. ' + o))))); }
+    if (q.type === 'tf') body.push(h('div', { class: 'tfrow' }, [true, false].map(v => h('button', { class: 'opt' + (r === v ? ' sel' : ''), role: 'radio', 'aria-checked': r === v ? 'true' : 'false', onclick: () => { this.setResp(i, r === v ? undefined : v); this.paintQ(); } }, v ? 'True' : 'False'))));
+    if (q.type === 'matching') {
+      const cur = r && typeof r === 'object' ? Object.assign({}, r) : {};
+      body.push(h('p', { class: 'small muted', style: 'margin-top:-6px' }, 'Choose the matching item for each row.'));
+      q.left.forEach((l, li) => {
+        const sel = h('select', { 'aria-label': 'Match for ' + l, onchange: () => { if (sel.value === '') delete cur[li]; else cur[li] = Number(sel.value); this.setResp(i, Object.keys(cur).length ? Object.assign({}, cur) : undefined); } },
+          h('option', { value: '' }, '— choose —'), q.right.map((rt, j) => h('option', { value: String(j), selected: cur[li] === j }, LETTERS[j] + '. ' + rt)));
+        body.push(h('div', { class: 'mrow' }, h('div', null, h('b', null, (li + 1) + '. '), l), sel));
+      });
+    }
+    const flagBtn = h('button', { class: 'btn btn-sm', 'aria-pressed': this.flags[i] ? 'true' : 'false', onclick: () => { if (this.flags[i]) delete this.flags[i]; else this.flags[i] = 1; SS.set('flags', this.flags); this.paintQ(); this.paintNav(); } }, this.flags[i] ? '⚑ Flagged' : '⚐ Flag for review');
+    const clearBtn = this.answered(i) ? h('button', { class: 'btn btn-sm', onclick: () => { this.setResp(i, undefined); this.paintQ(); } }, 'Clear answer') : null;
+    put(this.qBox, h('div', { class: 'qcard', oncopy: e => e.preventDefault(), oncontextmenu: e => e.preventDefault() },
+      h('div', { class: 'qhead' }, h('span', { class: 'qnum' }, 'Question ' + (i + 1) + ' of ' + this.paper.length), h('span', { class: 'badge' }, TYPE_LABEL[q.type] || q.type), h('span', { class: 'right row' }, clearBtn, flagBtn)),
+      body,
+      h('div', { class: 'qfoot' }, h('button', { class: 'btn', disabled: i === 0, onclick: () => this.go(i - 1) }, '← Previous'),
+        i < this.paper.length - 1 ? h('button', { class: 'btn btn-primary right', onclick: () => this.go(i + 1) }, 'Next →') : h('button', { class: 'btn btn-navy right', onclick: () => this.review() }, 'Review & submit'))));
+  },
+  tick() {
+    if (!this.attempt || !this.timerEl) return;
+    const left = this.attempt.deadlineAt ? this.attempt.deadlineAt - (Date.now() + this.offset) : null;
+    if (left === null) { this.timerEl.textContent = 'No limit'; return; }
+    this.timerEl.textContent = clock(left);
+    this.timerEl.className = 'timer' + (left < 60000 ? ' crit' : left < 5 * 60000 ? ' warn' : '');
+    this.timerEl.setAttribute('aria-label', 'Time left ' + clock(left));
+    if (left <= 0 && !this.submitting) this.submit(true);
+  },
+  scheduleSave(ms) { clearTimeout(this._sd); this._sd = setTimeout(() => this.save(), ms); },
+  async save() {
+    if (this.saving || this.submitting || !this.dirty) return;
+    this.saving = true; const snap = JSON.stringify(this.resp);
+    this.saveEl.className = 'save'; this.saveEl.textContent = 'Saving…';
+    const r = await API.call('examSave', { etoken: this.s.etoken, responses: this.resp, leaves: this.leaves }, { timeout: 25000 });
+    this.saving = false;
+    if (r.ok && r.already) return this.finished(r.attempt);
+    if (r.ok) {
+      if (JSON.stringify(this.resp) === snap) this.dirty = false;
+      this.lastSaved = Date.now(); if (r.deadlineAt) this.attempt.deadlineAt = r.deadlineAt;
+      if (r.serverTime) this.offset = r.serverTime - Date.now();
+      this.saveEl.className = 'save'; this.saveEl.textContent = 'Saved ' + fmtT(Date.now());
+      if (this.dirty) this.scheduleSave(800);
+    } else {
+      if (r.code === 'examauth') { this.saveEl.className = 'save bad'; this.saveEl.textContent = 'Session ended'; return this.sessionLost(r.error); }
+      this.saveEl.className = 'save bad'; this.saveEl.textContent = 'Not saved — retrying';
+      this.scheduleSave(5000);
+    }
+  },
+  review() {
+    const n = this.paper.length, un = this.paper.map((_, i) => i).filter(i => !this.answered(i)), fl = Object.keys(this.flags).map(Number);
+    const list = (arr) => arr.length ? h('div', { class: 'row', style: 'gap:6px;margin:6px 0 12px' }, arr.map(i => h('button', { class: 'btn btn-sm', onclick: () => { m.close(); this.go(i); } }, i + 1))) : h('p', { class: 'small muted' }, 'None.');
+    const btn = h('button', { class: 'btn btn-navy', onclick: async () => { m.close(); await this.submit(false); } }, 'Submit my exam');
+    const m = modal('Review before submitting', h('div', null,
+      h('p', null, 'You have answered ', h('b', null, (n - un.length) + ' of ' + n), ' questions.'),
+      h('h3', null, 'Not answered (' + un.length + ')'), list(un),
+      h('h3', null, 'Flagged for review (' + fl.length + ')'), list(fl),
+      h('div', { class: 'msg warn' }, 'After you submit, you cannot return to the exam or change any answer.'),
+      h('div', { class: 'row', style: 'justify-content:flex-end' }, h('button', { class: 'btn', onclick: () => m.close() }, 'Back to the exam'), btn)));
+  },
+  async submit(auto) {
+    if (this.submitting) return; this.submitting = true;
+    clearTimeout(this._sd);
+    const wait = modal(auto ? 'Time is up' : 'Submitting…', h('div', null, h('p', null, auto ? 'Your time is over. Your answers are being submitted…' : 'Please wait while your answers are submitted…'), h('div', { class: 'msg info', id: 'x-subst' }, 'Contacting the server…')), { noEsc: true });
+    for (let k = 0; k < 40; k++) {
+      const r = await API.call('examSubmit', { etoken: this.s.etoken, responses: this.resp, leaves: this.leaves, auto: !!auto }, { timeout: 30000 });
+      if (r.ok) { wait.close(); return this.finished(r.attempt); }
+      if (r.code === 'examauth') { wait.close(); return this.sessionLost('Your exam was already submitted or your session has ended.'); }
+      const st = document.getElementById('x-subst'); if (st) { st.className = 'msg bad'; st.textContent = (r.error || 'Not submitted yet.') + ' Retrying in 5 seconds — do not close this window.'; }
+      await new Promise(res => setTimeout(res, 5000));
+    }
+    wait.close(); this.submitting = false;
+    toast('Submission failed. Tell the invigilator immediately. Your saved answers are on the server.', 'bad');
+  },
+  finished(attempt) { this.guards(false); clearInterval(this.timerId); clearInterval(this.saveId); try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) { } this.clear(); this.doneView(attempt); },
+  sessionLost(text) { this.guards(false); clearInterval(this.timerId); clearInterval(this.saveId); this.clear(); this.loginView(text + ' Sign in again to see your status.', 'warn'); },
+  doneView(att) {
+    this.clear();
+    const scoreBox = att && att.percent !== undefined && att.percent !== null ? h('div', { class: 'facts', style: 'margin-top:14px' },
+      h('div', { class: 'fact' }, h('b', null, att.score + ' / ' + att.total), h('span', null, 'marks')), h('div', { class: 'fact' }, h('b', null, att.percent + '%'), h('span', null, 'score')),
+      h('div', { class: 'fact' }, h('b', null, att.correct + ' · ' + att.incorrect + ' · ' + att.unanswered), h('span', null, 'correct · incorrect · blank'))) : null;
+    mount(h('div', { class: 'gate' }, h('div', { class: 'card', style: 'text-align:center;max-width:520px' },
+      h('div', { class: 'done-ic', html: ICON.check }), h('h1', null, 'Your exam has been submitted'),
+      h('p', { class: 'muted' }, att && att.submittedAt ? 'Received by the server at ' + fmtT(att.submittedAt) + (att.submitMode === 'auto' ? ' (submitted automatically when the time ended).' : '.') : 'Your answers are stored on the server.'),
+      scoreBox, h('p', { class: 'small muted' }, scoreBox ? 'Final results are confirmed by the examiner.' : 'Your result will be released by the examiner.'),
+      h('p', { class: 'small' }, 'You may now close this window.'),
+      h('button', { class: 'btn', onclick: () => this.loginView() }, 'Finish'))));
+  },
+  clear() { SS.del('sess'); SS.del('started'); SS.del('resp'); SS.del('flags'); SS.del('cur'); SS.del('leaves'); this.paper = null; this.attempt = null; },
+  async signOut() { if (this.s) API.call('examLogout', { etoken: this.s.etoken }); this.clear(); this.s = null; this.loginView('You have signed out.', 'info'); },
+
+  /* deterrents (NOT security: the server is the security) — they record leaving the window and warn */
+  guards(on) {
+    if (!this._g) this._g = {
+      vis: () => { if (document.visibilityState === 'hidden') this.left(); },
+      blur: () => this.left(),
+      unload: e => { e.preventDefault(); e.returnValue = ''; },
+      pop: () => { history.pushState(null, '', location.href); toast('Navigation is disabled during the exam.', 'warn'); },
+      key: e => { if ((e.ctrlKey || e.metaKey) && ['c', 'p', 's', 'u'].includes(e.key.toLowerCase())) e.preventDefault(); }
+    };
+    const g = this._g;
+    if (on && !this._gon) {
+      this._gon = true; history.pushState(null, '', location.href);
+      document.addEventListener('visibilitychange', g.vis); window.addEventListener('blur', g.blur); window.addEventListener('beforeunload', g.unload); window.addEventListener('popstate', g.pop); document.addEventListener('keydown', g.key);
+    } else if (!on && this._gon) {
+      this._gon = false;
+      document.removeEventListener('visibilitychange', g.vis); window.removeEventListener('blur', g.blur); window.removeEventListener('beforeunload', g.unload); window.removeEventListener('popstate', g.pop); document.removeEventListener('keydown', g.key);
+    }
+  },
+  left() {
+    const now = Date.now(); if (this._lastLeave && now - this._lastLeave < 1500) return; this._lastLeave = now;
+    this.leaves++; SS.set('leaves', this.leaves); this.dirty = true; this.scheduleSave(1000);
+    if (this.warnEl) { this.warnEl.classList.remove('hidden'); this.warnEl.textContent = 'You left the exam window (' + this.leaves + (this.leaves === 1 ? ' time' : ' times') + '). This is recorded and reported to the examiner.'; }
+  }
+};
+
+/* ==========================================================================
+   TEACHER
+   ========================================================================== */
+const Teacher = {
+  token: '', contentKey: '', tab: 'exams', bank: [], exams: [], students: null,
+  loginView(msg) {
+    const pw = h('input', { type: 'password', autocomplete: 'current-password', placeholder: 'Teacher password for this module' });
+    const m = h('div', { class: 'msg bad', role: 'alert' }, msg || '');
+    const btn = h('button', { class: 'btn btn-navy', type: 'submit', style: 'width:100%;justify-content:center' }, 'Sign in');
+    mount(h('div', { class: 'gate' }, h('div', { class: 'card' }, brand('Examiner · ' + MOD.title), h('h1', null, 'Teacher sign-in'),
+      h('p', { class: 'small muted', style: 'margin-top:0' }, 'The same teacher password as the ' + MOD.title + ' teaching platform.'),
+      h('form', { onsubmit: async e => {
+        e.preventDefault(); if (!pw.value) return; btn.disabled = true; m.textContent = '';
+        const r = await API.call('login', { password: pw.value }); btn.disabled = false;
+        if (!r.ok) { m.textContent = r.error || 'Sign-in failed.'; return; }
+        const info = await API.call('examInfo', {});
+        if (!info.ok || !info.version || Number(info.version) < 1.7) { m.textContent = 'The backend is still on version ' + (info.version || '?') + '. Paste the new Code.gs (1.7) and deploy it as a new version first.'; return; }
+        this.token = r.token; this.contentKey = r.contentKey || '';
+        SS.set('tt', { token: r.token, ck: this.contentKey }); this.shell();
+      } }, h('label', { class: 'f' }, h('span', null, 'Password'), pw), m, btn),
+      h('div', { style: 'text-align:right;margin-top:10px' }, h('button', { class: 'btn-link tiny', onclick: () => Stu.loginView() }, '← Student sign-in')))));
+    setTimeout(() => pw.focus(), 30);
+  },
+  resumeOrLogin() { const t = SS.get('tt', null); if (t && t.token) { this.token = t.token; this.contentKey = t.ck || ''; this.shell(); } else this.loginView(); },
+  async call(action, p, o) {
+    const r = await API.call(action, Object.assign({ token: this.token }, p || {}), o);
+    if (!r.ok && (r.code === 'auth' || r.code === 'studentauth')) { SS.del('tt'); this.loginView('Your teacher session has ended — please sign in again.'); throw new Error('auth'); }
+    return r;
+  },
+  shell() {
+    const tabs = [['exams', 'Exams'], ['bank', 'Exam question bank'], ['results', 'Results'], ['help', 'Help']];
+    this.body = h('div', { class: 'twrap' });
+    mount(h('div', { class: 'tbar' }, h('span', { class: 'ttl' }, 'Official Exams · ' + MOD.title),
+      tabs.map(([k, l]) => h('button', { class: 'tab' + (this.tab === k ? ' on' : ''), onclick: () => { this.tab = k; this.shell(); } }, l)),
+      h('button', { class: 'btn btn-sm right', style: 'background:transparent;color:#fff;border-color:#4a6789', onclick: () => { API.call('logout', { token: this.token }); SS.del('tt'); this.token = ''; Stu.loginView('Teacher signed out.', 'info'); } }, 'Sign out')), this.body);
+    ({ exams: () => this.examsTab(), bank: () => this.bankTab(), results: () => this.resultsTab(), help: () => this.helpTab() })[this.tab]();
+  },
+  loading(t) { put(this.body, h('p', { class: 'muted' }, t || 'Loading…')); },
+  async loadBank() { const r = await this.call('examBankList'); if (r.ok) this.bank = r.questions || []; return r; },
+  async loadExams() { const r = await this.call('examList'); if (r.ok) this.exams = r.exams || []; return r; },
+  async loadStudents() { if (this.students) return this.students; const r = await this.call('listStudents'); this.students = r.ok ? r.students : []; return this.students; },
+
+  /* ---------------- exams ---------------- */
+  async examsTab() {
+    this.loading(); const r = await this.loadExams(); if (!r.ok) return put(this.body, h('div', { class: 'msg bad' }, r.error));
+    const stateBadge = e => ({ draft: h('span', { class: 'badge' }, 'Draft'), notyet: h('span', { class: 'badge amber' }, 'Scheduled'), open: h('span', { class: 'badge green' }, 'Open now'), closed: h('span', { class: 'badge navy' }, 'Closed') })[e.state] || h('span', { class: 'badge' }, e.state);
+    put(this.body, 
+      h('div', { class: 'row', style: 'margin-bottom:14px' }, h('h1', { style: 'margin:0' }, 'Exams'), h('button', { class: 'btn btn-primary right', onclick: () => this.editExam(null) }, '+ New exam')),
+      this.exams.length ? null : h('div', { class: 'card' }, h('p', null, 'No exams yet.'), h('p', { class: 'muted small' }, 'Start by adding questions in “Exam question bank”, then create an exam here.')),
+      this.exams.map(e => h('div', { class: 'card excard' },
+        h('div', null, h('div', { class: 'row' }, h('h2', { style: 'margin:0' }, e.title), stateBadge(e), e.lockTeaching ? h('span', { class: 'badge teal', title: 'The teaching platform is closed for candidates during the exam window' }, 'Teaching locked during exam') : null),
+          h('div', { class: 'small muted', style: 'margin-top:4px' }, fmtDT(e.opensAt) + ' → ' + fmtT(e.closesAt) + ' · ' + e.durationMin + ' min · ' + ((e.poolCount > 0 ? Math.min(e.poolCount, e.questionIds.length) + ' of ' : '') + e.questionIds.length) + ' questions · ' + (e.candidates === 'all' ? 'all active students' : e.candidates.length + ' candidates')),
+          h('div', { class: 'small', style: 'margin-top:4px' }, 'Access code: ', h('b', { style: 'letter-spacing:.06em' }, e.code || '—'), ' · ', e.stats.submitted + ' submitted / ' + e.stats.attempts + ' started')),
+        h('div', { class: 'row' }, h('button', { class: 'btn btn-sm', onclick: () => this.editExam(e) }, 'Edit'),
+          h('button', { class: 'btn btn-sm', onclick: () => { this.tab = 'results'; this.resExam = e.id; this.shell(); } }, 'Results'),
+          e.status === 'published' && e.state !== 'closed' ? h('button', { class: 'btn btn-sm btn-danger', onclick: async () => { if (!await confirmBox('Close this exam now?', 'No new student can start. Students already writing are auto-submitted when their own timer ends.', 'Close exam', true)) return; await this.saveExam(Object.assign({}, e, { status: 'closed' })); this.examsTab(); } }, 'Close now') : null,
+          h('button', { class: 'btn btn-sm btn-danger', onclick: () => this.deleteExam(e) }, 'Delete')))));
+  },
+  async saveExam(e) { const r = await this.call('examUpsert', { exam: e }); if (!r.ok) toast(r.error, 'bad'); else toast('Saved.'); return r; },
+  async deleteExam(e) {
+    if (!await confirmBox('Delete “' + e.title + '”?', 'The exam definition is removed. Questions stay in the exam bank.', 'Delete', true)) return;
+    let r = await this.call('examRemove', { id: e.id });
+    if (!r.ok && r.code === 'hasresults') {
+      if (!await confirmBox('Delete the results too?', r.error + ' Deleting also removes every attempt of this exam permanently.', 'Delete exam and results', true)) return;
+      r = await this.call('examRemove', { id: e.id, withResults: true });
+    }
+    toast(r.ok ? 'Deleted.' : r.error, r.ok ? 'ok' : 'bad'); this.examsTab();
+  },
+  async editExam(ex) {
+    this.loading(); await this.loadBank(); const students = await this.loadStudents();
+    const e = ex ? JSON.parse(JSON.stringify(ex)) : { title: '', instructions: 'Answer every question. Each question carries one mark (matching and multi-blank questions earn partial marks). There is no negative marking.', code: '', opensAt: 0, closesAt: 0, durationMin: 60, questionIds: [], poolCount: 0, shuffleQuestions: true, shuffleOptions: true, showScore: false, lockTeaching: true, candidates: 'all', status: 'draft' };
+    const toLocal = ms => { if (!ms) return ''; const d = new Date(ms); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 16); };
+    const fromLocal = v => v ? new Date(v).getTime() : 0;
+    const title = h('input', { type: 'text', value: e.title, maxlength: 120 });
+    const instr = h('textarea', null); instr.value = e.instructions || '';
+    const code = h('input', { type: 'text', value: e.code, maxlength: 40, style: 'text-transform:uppercase;letter-spacing:.08em;font-weight:700' });
+    const gen = () => { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; const b = crypto.getRandomValues(new Uint8Array(6)); code.value = Array.from(b, x => A[x % A.length]).join(''); };
+    if (!e.code) gen();
+    const opens = h('input', { type: 'datetime-local', value: toLocal(e.opensAt) }), closes = h('input', { type: 'datetime-local', value: toLocal(e.closesAt) });
+    const dur = h('input', { type: 'number', min: 1, max: 600, value: e.durationMin });
+    const pool = h('input', { type: 'number', min: 0, value: e.poolCount || 0, style: 'width:90px' });
+    const cb = (v, t, sub) => { const i = h('input', { type: 'checkbox', checked: !!v }); return [i, h('label', { class: 'chk' }, i, h('span', null, t, sub ? h('div', { class: 'tiny muted' }, sub) : null))]; };
+    const [sq, sqL] = cb(e.shuffleQuestions, 'Shuffle the question order for each student');
+    const [so, soL] = cb(e.shuffleOptions, 'Shuffle the answer options for each student');
+    const [ss, ssL] = cb(e.showScore, 'Show the student their score right after submitting', 'Off = the student only sees “submitted”; you release results later.');
+    const [lt, ltL] = cb(e.lockTeaching, 'Close the teaching platform for candidates during the exam', 'From 15 minutes before opening until closing, candidates cannot sign in to or use the teaching platform (enforced by the server). Other students are not affected.');
+    const candAll = h('input', { type: 'radio', name: 'cand', checked: e.candidates === 'all' }), candSome = h('input', { type: 'radio', name: 'cand', checked: e.candidates !== 'all' });
+    const candTxt = h('textarea', { placeholder: 'One student ID per line (or separated by commas)', style: 'min-height:110px' }); candTxt.value = e.candidates === 'all' ? '' : e.candidates.join('\n');
+    const candInfo = h('div', { class: 'tiny muted' });
+    const known = new Set(students.map(s => String(s.username).toLowerCase()));
+    const candCheck = () => { const ids = candTxt.value.split(/[\s,;]+/).map(x => x.trim().toLowerCase()).filter(Boolean); const unk = ids.filter(x => !known.has(x)); candInfo.textContent = ids.length + ' ID(s)' + (unk.length ? ' · not found in the student list: ' + unk.slice(0, 12).join(', ') + (unk.length > 12 ? '…' : '') : ' · all found'); candInfo.style.color = unk.length ? 'var(--red)' : ''; };
+    candTxt.addEventListener('input', candCheck); candCheck();
+    // question picker
+    const sel = new Set(e.questionIds.filter(id => this.bank.some(q => q.id === id)));
+    const qFilter = h('input', { type: 'search', placeholder: 'Filter questions…' });
+    const qType = h('select', null, h('option', { value: '' }, 'All types'), Object.keys(TYPE_LABEL).map(k => h('option', { value: k }, TYPE_LABEL[k])));
+    const qList = h('div', { class: 'qlist' }), qCount = h('b');
+    const paintList = () => {
+      const f = qFilter.value.toLowerCase(), t = qType.value;
+      const rows = this.bank.filter(q => (!t || q.type === t) && (!f || (q.stem + ' ' + (q.topic || '')).toLowerCase().includes(f)));
+      put(qList, ...(rows.length ? rows.map(q => { const c = h('input', { type: 'checkbox', checked: sel.has(q.id), onchange: () => { if (c.checked) sel.add(q.id); else sel.delete(q.id); qCount.textContent = sel.size; } });
+        return h('label', { class: 'qitem' }, c, h('div', null, h('span', { class: 'badge' }, TYPE_LABEL[q.type]), ' ', q.topic ? h('span', { class: 'tiny muted' }, q.topic + ' · ') : null, q.stem.slice(0, 220))); }) : [h('div', { class: 'qitem muted' }, this.bank.length ? 'No question matches.' : 'The exam bank is empty — add questions in the “Exam question bank” tab first.')]));
+      qCount.textContent = sel.size;
+    };
+    qFilter.addEventListener('input', paintList); qType.addEventListener('change', paintList); paintList();
+    const allBtn = h('button', { class: 'btn btn-sm', onclick: () => { qList.querySelectorAll('input').forEach(c => { c.checked = true; c.dispatchEvent(new Event('change')); }); } }, 'Select all shown');
+    const noneBtn = h('button', { class: 'btn btn-sm', onclick: () => { qList.querySelectorAll('input').forEach(c => { c.checked = false; c.dispatchEvent(new Event('change')); }); } }, 'Clear shown');
+    const msg = h('div', { class: 'msg bad' });
+    const collect = status => Object.assign({}, e, { title: title.value.trim(), instructions: instr.value, code: code.value.trim().toUpperCase(), opensAt: fromLocal(opens.value), closesAt: fromLocal(closes.value),
+      durationMin: Number(dur.value) || 0, questionIds: this.bank.filter(q => sel.has(q.id)).map(q => q.id), poolCount: Number(pool.value) || 0,
+      shuffleQuestions: sq.checked, shuffleOptions: so.checked, showScore: ss.checked, lockTeaching: lt.checked,
+      candidates: candAll.checked ? 'all' : candTxt.value.split(/[\s,;]+/).map(x => x.trim()).filter(Boolean), status });
+    const doSave = async status => {
+      const x = collect(status); msg.className = 'msg bad'; msg.textContent = '';
+      if (status === 'published') {
+        if (x.closesAt && x.opensAt && (x.closesAt - x.opensAt) < x.durationMin * 60000) { if (!await confirmBox('Window shorter than the exam', 'The exam window (' + fmtDur(x.closesAt - x.opensAt) + ') is shorter than the time allowed (' + x.durationMin + ' min). Students who start late will have less time. Publish anyway?', 'Publish')) return; }
+        if (x.poolCount > x.questionIds.length) { msg.textContent = 'The number of random questions is larger than the number selected.'; return; }
+      }
+      const r = await this.saveExam(x);
+      if (r.ok) { this.examsTab(); } else msg.textContent = r.error;
+    };
+    put(this.body, h('div', { class: 'row', style: 'margin-bottom:14px' }, h('button', { class: 'btn btn-sm', onclick: () => this.examsTab() }, '← Exams'), h('h1', { style: 'margin:0' }, ex ? 'Edit exam' : 'New exam')),
+      h('div', { class: 'card', style: 'margin-bottom:14px' }, h('h2', null, '1 · Details'),
+        h('label', { class: 'f' }, h('span', null, 'Title'), title),
+        h('label', { class: 'f' }, h('span', null, 'Instructions shown to students before they start'), instr),
+        h('div', { class: 'three' }, h('label', { class: 'f' }, h('span', null, 'Opens at'), opens), h('label', { class: 'f' }, h('span', null, 'Closes at'), closes), h('label', { class: 'f' }, h('span', null, 'Time allowed (minutes)'), dur)),
+        h('p', { class: 'tiny muted', style: 'margin-top:-6px' }, 'Each student gets the full time from the moment they press Start, but never beyond the closing time.'),
+        h('div', { class: 'two' }, h('label', { class: 'f' }, h('span', null, 'Exam access code (announce it in the exam room)'), h('div', { class: 'row', style: 'flex-wrap:nowrap' }, code, h('button', { class: 'btn btn-sm', type: 'button', onclick: gen }, 'New code'))), h('div'))),
+      h('div', { class: 'card', style: 'margin-bottom:14px' }, h('h2', null, '2 · Questions'),
+        h('div', { class: 'row', style: 'margin-bottom:8px' }, h('div', { class: 'grow', style: 'min-width:180px' }, qFilter), h('div', { style: 'width:200px' }, qType), allBtn, noneBtn),
+        qList, h('div', { class: 'row', style: 'margin-top:10px' }, h('span', null, 'Selected: ', qCount), h('label', { class: 'row small right' }, 'Random questions per student (0 = all selected)', pool)),
+        sqL, soL),
+      h('div', { class: 'card', style: 'margin-bottom:14px' }, h('h2', null, '3 · Candidates & security'),
+        h('label', { class: 'chk' }, candAll, h('span', null, 'All active students of ' + MOD.title + ' (' + students.filter(s => s.active).length + ')')),
+        h('label', { class: 'chk' }, candSome, h('span', null, 'Only these student IDs')), candTxt, candInfo,
+        h('div', { style: 'margin-top:12px' }, ltL, ssL)),
+      msg,
+      h('div', { class: 'row' }, h('button', { class: 'btn', onclick: () => doSave('draft') }, 'Save as draft'), h('button', { class: 'btn btn-primary', onclick: () => doSave('published') }, e.status === 'published' ? 'Save & keep published' : 'Publish exam'),
+        e.status === 'published' ? h('button', { class: 'btn', onclick: () => doSave('draft') }, 'Unpublish (back to draft)') : null));
+  },
+
+  /* ---------------- exam question bank ---------------- */
+  async bankTab() {
+    this.loading(); const r = await this.loadBank(); if (!r.ok) return put(this.body, h('div', { class: 'msg bad' }, r.error));
+    const f = h('input', { type: 'search', placeholder: 'Search the exam bank…' }), t = h('select', null, h('option', { value: '' }, 'All types'), Object.keys(TYPE_LABEL).map(k => h('option', { value: k }, TYPE_LABEL[k])));
+    const sel = new Set(); const tbody = h('tbody'); const delBtn = h('button', { class: 'btn btn-sm btn-danger', disabled: true }, 'Delete selected');
+    const src = q => q.source && q.source.kind === 'course' ? h('span', { class: 'badge' }, 'course ' + (q.source.origId || '')) : q.source && q.source.kind === 'imported' ? h('span', { class: 'badge' }, 'imported') : h('span', { class: 'badge teal' }, 'exam-only');
+    const paint = () => {
+      const fv = f.value.toLowerCase(), tv = t.value;
+      const rows = this.bank.filter(q => (!tv || q.type === tv) && (!fv || (q.stem + ' ' + (q.topic || '')).toLowerCase().includes(fv)));
+      put(tbody, ...rows.map((q, i) => { const c = h('input', { type: 'checkbox', checked: sel.has(q.id), 'aria-label': 'Select', onchange: () => { if (c.checked) sel.add(q.id); else sel.delete(q.id); delBtn.disabled = !sel.size; delBtn.textContent = 'Delete selected (' + sel.size + ')'; } });
+        return h('tr', null, h('td', null, c), h('td', null, h('span', { class: 'badge' }, TYPE_LABEL[q.type])), h('td', null, q.stem.slice(0, 200), q.image ? ' 🖼' : ''), h('td', { class: 'small muted' }, q.topic || ''), h('td', null, src(q)), h('td', null, h('button', { class: 'btn btn-sm', onclick: () => this.editQuestion(q) }, 'Edit'))); }));
+      if (!rows.length) tbody.append(h('tr', null, h('td', { colspan: 6, class: 'muted' }, this.bank.length ? 'No question matches.' : 'The exam bank is empty. Add questions from the course question bank, write new ones, or import them.')));
+    };
+    f.addEventListener('input', paint); t.addEventListener('change', paint);
+    delBtn.onclick = async () => { if (!await confirmBox('Delete ' + sel.size + ' question(s)?', 'They are removed from the exam bank. Exams already taken keep their own frozen copy, so results are not affected.', 'Delete', true)) return; const r2 = await this.call('examBankDelete', { ids: Array.from(sel) }); toast(r2.ok ? 'Deleted.' : r2.error, r2.ok ? 'ok' : 'bad'); this.bankTab(); };
+    const counts = Object.keys(TYPE_LABEL).map(k => [k, this.bank.filter(q => q.type === k).length]).filter(x => x[1]);
+    put(this.body, 
+      h('div', { class: 'row', style: 'margin-bottom:6px' }, h('h1', { style: 'margin:0' }, 'Exam question bank'), h('span', { class: 'badge navy' }, this.bank.length + ' questions')),
+      h('p', { class: 'muted small', style: 'margin-top:0' }, 'Private: these questions and their answers are never sent to students’ browsers except as an answer-free exam paper. ' + counts.map(x => x[1] + ' ' + TYPE_LABEL[x[0]]).join(' · ')),
+      h('div', { class: 'row', style: 'margin:10px 0 14px' }, h('button', { class: 'btn btn-primary', onclick: () => this.pickFromCourse() }, '+ Add from the course question bank'), h('button', { class: 'btn', onclick: () => this.editQuestion(null) }, '+ Write a new question'), h('button', { class: 'btn', onclick: () => this.importJson() }, 'Import (JSON / Claude)')),
+      h('div', { class: 'card' }, h('div', { class: 'row', style: 'margin-bottom:10px' }, h('div', { class: 'grow', style: 'min-width:200px' }, f), h('div', { style: 'width:210px' }, t), delBtn),
+        h('div', { class: 'tscroll' }, h('table', { class: 't' }, h('thead', null, h('tr', null, h('th', null, ''), h('th', null, 'Type'), h('th', null, 'Question'), h('th', null, 'Topic'), h('th', null, 'Source'), h('th', null, ''))), tbody))));
+    paint();
+  },
+  editQuestion(q0) {
+    const q = q0 ? JSON.parse(JSON.stringify(q0)) : { type: 'mcq', stem: '', options: [], answer: 0, explanation: '', topic: '', image: '' };
+    const type = h('select', null, Object.keys(TYPE_LABEL).map(k => h('option', { value: k, selected: q.type === k }, TYPE_LABEL[k])));
+    const cas = h('textarea', { placeholder: 'Clinical case (vignette only)' }); cas.value = q.case || '';
+    const stem = h('textarea', null); stem.value = q.stem || '';
+    const opts = h('textarea', { style: 'min-height:130px' });
+    opts.value = (q.options || []).map((o, i) => ((q.type === 'selectall' ? (q.answers || []).includes(i) : q.answer === i) ? '* ' : '') + o).join('\n');
+    const tf = h('select', null, h('option', { value: 'true', selected: q.answer === true }, 'True'), h('option', { value: 'false', selected: q.answer === false }, 'False'));
+    const blanks = h('textarea', { placeholder: 'One line per blank; alternatives separated by |' }); blanks.value = q.type === 'fillblank' ? (q.answers || []).map(a => a.join(' | ')).join('\n') : '';
+    const pairs = h('textarea', { placeholder: 'One pair per line:  left item = matching right item', style: 'min-height:120px' }); pairs.value = (q.pairs || []).map(p => p.left + ' = ' + p.right).join('\n');
+    const topic = h('input', { type: 'text', value: q.topic || '' }), image = h('input', { type: 'text', value: q.image || '', placeholder: 'https://… (optional, must be an image you may use)' });
+    const expl = h('textarea', { placeholder: 'Shown only to teachers (results review)' }); expl.value = q.explanation || '';
+    const fCase = h('label', { class: 'f' }, h('span', null, 'Case'), cas), fOpts = h('label', { class: 'f' }, h('span', null, 'Options — one per line; start the correct one(s) with *'), opts),
+      fTf = h('label', { class: 'f' }, h('span', null, 'Correct answer'), tf), fBl = h('label', { class: 'f' }, h('span', null, 'Accepted answers — one line per blank (___ in the text)'), blanks), fPairs = h('label', { class: 'f' }, h('span', null, 'Pairs'), pairs);
+    const vis = () => { const t = type.value; fCase.classList.toggle('hidden', t !== 'vignette'); fOpts.classList.toggle('hidden', !['mcq', 'vignette', 'selectall'].includes(t)); fTf.classList.toggle('hidden', t !== 'tf'); fBl.classList.toggle('hidden', t !== 'fillblank'); fPairs.classList.toggle('hidden', t !== 'matching'); };
+    type.addEventListener('change', vis); vis();
+    const msg = h('div', { class: 'msg bad' });
+    const save = async () => {
+      const t = type.value, o = { id: q.id, type: t, stem: stem.value.trim(), topic: topic.value.trim(), image: image.value.trim(), explanation: expl.value.trim(), source: q.source || { kind: 'new' }, difficulty: q.difficulty || 0 };
+      if (t === 'vignette') o.case = cas.value.trim();
+      if (['mcq', 'vignette', 'selectall'].includes(t)) {
+        const lines = opts.value.split('\n').map(x => x.trim()).filter(Boolean);
+        o.options = lines.map(x => x.replace(/^\*\s*/, '')); const cor = lines.map((x, i) => x.startsWith('*') ? i : -1).filter(i => i >= 0);
+        if (t === 'selectall') o.answers = cor; else { if (cor.length !== 1) { msg.textContent = 'Mark exactly one correct option with *.'; return; } o.answer = cor[0]; }
+      }
+      if (t === 'tf') o.answer = tf.value === 'true';
+      if (t === 'fillblank') o.answers = blanks.value.split('\n').map(x => x.split('|').map(y => y.trim()).filter(Boolean)).filter(a => a.length);
+      if (t === 'matching') o.pairs = pairs.value.split('\n').map(x => x.trim()).filter(Boolean).map(x => { const k = x.indexOf('='); return k < 0 ? { left: x, right: '' } : { left: x.slice(0, k).trim(), right: x.slice(k + 1).trim() }; });
+      const r = await this.call('examBankSave', { questions: [o] });
+      if (!r.ok) { msg.textContent = r.error; return; }
+      if (r.errors && r.errors.length) { msg.textContent = r.errors[0].error; return; }
+      m.close(); toast('Saved.'); this.bankTab();
+    };
+    const m = modal(q0 ? 'Edit exam question' : 'New exam question', h('div', null,
+      h('div', { class: 'two' }, h('label', { class: 'f' }, h('span', null, 'Type'), type), h('label', { class: 'f' }, h('span', null, 'Topic (optional)'), topic)),
+      fCase, h('label', { class: 'f' }, h('span', null, 'Question text'), stem), fOpts, fTf, fBl, fPairs,
+      h('label', { class: 'f' }, h('span', null, 'Image URL'), image), h('label', { class: 'f' }, h('span', null, 'Explanation'), expl), msg,
+      h('div', { class: 'row', style: 'justify-content:flex-end' }, h('button', { class: 'btn', onclick: () => m.close() }, 'Cancel'), h('button', { class: 'btn btn-primary', onclick: save }, 'Save question'))), { wide: true });
+  },
+  importJson() {
+    const PROMPT = 'Write official pathology exam questions as JSON only (no commentary), in this exact format:\n{"questions":[\n {"type":"mcq","topic":"…","stem":"…","options":["…","…","…","…"],"answer":2,"explanation":"…"},\n {"type":"vignette","case":"clinical case…","stem":"…","options":["…","…","…","…"],"answer":0,"explanation":"…"},\n {"type":"tf","stem":"statement…","answer":true,"explanation":"…"},\n {"type":"selectall","stem":"… (select all that apply)","options":["…","…","…","…"],"answers":[0,2],"explanation":"…"},\n {"type":"fillblank","stem":"text with ___ for each blank","answers":[["accepted","alternative"]],"explanation":"…"},\n {"type":"matching","stem":"Match …","pairs":[{"left":"…","right":"…"},{"left":"…","right":"…"},{"left":"…","right":"…"}],"explanation":"…"}\n]}\n"answer"/"answers" are 0-based option positions. Use only facts from the attached syllabus.';
+    const ta = h('textarea', { style: 'min-height:260px;font-family:ui-monospace,Consolas,monospace;font-size:.85rem', placeholder: '{"questions":[ … ]}' });
+    const msg = h('div', { class: 'msg bad' });
+    const m = modal('Import exam questions', h('div', null,
+      h('p', { class: 'small' }, 'Paste questions in the platform’s JSON format — for example the reply from Claude.ai. Short-answer questions are not accepted in official exams.'),
+      h('div', { class: 'row', style: 'margin-bottom:10px' }, h('button', { class: 'btn btn-sm', onclick: async () => { try { await navigator.clipboard.writeText(PROMPT); toast('Prompt copied — paste it into Claude.ai with your syllabus.'); } catch (e) { modal('Prompt for Claude', h('textarea', { style: 'min-height:260px' }, PROMPT)); } } }, '📋 Copy a prompt for Claude.ai')),
+      ta, msg, h('div', { class: 'row', style: 'justify-content:flex-end' }, h('button', { class: 'btn', onclick: () => m.close() }, 'Cancel'), h('button', { class: 'btn btn-primary', onclick: async () => {
+        let d; const txt = ta.value.trim().replace(/^```(json)?/i, '').replace(/```$/, '');
+        try { d = JSON.parse(txt); } catch (e) { msg.textContent = 'This is not valid JSON: ' + e.message; return; }
+        const list = Array.isArray(d) ? d : (d && d.questions) || [];
+        if (!list.length) { msg.textContent = 'No questions found.'; return; }
+        list.forEach(q => { delete q.id; q.source = { kind: 'new' }; });
+        const r = await this.call('examBankSave', { questions: list }, { timeout: 60000 });
+        if (!r.ok) { msg.textContent = r.error; return; }
+        m.close(); this.bankTab();
+        modal('Import finished', h('div', null, h('p', null, h('b', null, r.saved.length + ' question(s) added.')), r.errors.length ? h('div', null, h('p', null, r.errors.length + ' not added:'), h('ul', { class: 'small' }, r.errors.map(e => h('li', null, '#' + (e.index + 1) + ' “' + e.stem + '” — ' + e.error)))) : null));
+      } }, 'Add to exam bank'))), { wide: true });
+  },
+  async pickFromCourse() {
+    const courseUrl = localStorage.getItem('xm_course_' + BASE) || MOD.courseUrl;
+    const status = h('div', { class: 'msg info' }, 'Loading the course question bank…');
+    const box = h('div', null, status);
+    const m = modal('Add from the course question bank', box, { wide: true });
+    let data, extra = [], excl = [];
+    try {
+      if (!this.contentKey) throw new Error('No course key — sign out and sign in again.');
+      const html = await (await fetch(courseUrl, { cache: 'no-store' })).text();
+      const mm = html.match(/<script id="neo-enc" type="application\/json">([\s\S]*?)<\/script>/);
+      if (mm) {
+        const enc = JSON.parse(mm[1]), b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+        const key = await crypto.subtle.importKey('raw', b64(this.contentKey), { name: 'AES-GCM' }, false, ['decrypt']);
+        data = JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64(enc.iv) }, key, b64(enc.ct))));
+      } else {
+        const pm = html.match(/<script id="neo-data" type="application\/json">([\s\S]*?)<\/script>/); if (!pm) throw new Error('No course data found at ' + courseUrl);
+        data = JSON.parse(pm[1]);
+      }
+      const all = await this.call('getAllContent', { since: 0 }, { timeout: 60000 });
+      if (all.ok) {
+        const imp = {}; all.items.forEach(it => { if (it.collection === 'importedquestions') { if (it.deleted) delete imp[it.id]; else imp[it.id] = Object.assign({}, it.data, { id: it.id }); } if (it.collection === 'revexclude' && it.id === 'exclude') excl = (it.data && it.data.ids) || []; });
+        extra = Object.values(imp);
+      }
+    } catch (err) {
+      status.className = 'msg bad'; status.textContent = 'Could not load the course question bank: ' + (err.message || err) + '. Check the course link below.';
+      const inp = h('input', { type: 'text', value: courseUrl });
+      box.append(h('label', { class: 'f' }, h('span', null, 'Teaching platform link'), inp), h('button', { class: 'btn', onclick: () => { localStorage.setItem('xm_course_' + BASE, inp.value.trim()); m.close(); this.pickFromCourse(); } }, 'Save link and retry'));
+      return;
+    }
+    const topics = {}; (data.topics || []).forEach(t => { topics[t.id] = t.title; });
+    const inBank = new Set(this.bank.map(q => q.source && q.source.origId).filter(Boolean));
+    const qs = data.questions.map(q => Object.assign({}, q, { _kind: 'course' })).concat(extra.map(q => Object.assign({}, q, { _kind: 'imported' })));
+    const usable = qs.filter(q => TYPE_LABEL[q.type]);
+    const shortN = qs.length - usable.length;
+    const sel = new Set();
+    const fTopic = h('select', null, h('option', { value: '' }, 'All topics'), Object.keys(topics).map(k => h('option', { value: k }, topics[k])));
+    const fType = h('select', null, h('option', { value: '' }, 'All types'), Object.keys(TYPE_LABEL).map(k => h('option', { value: k }, TYPE_LABEL[k])));
+    const fText = h('input', { type: 'search', placeholder: 'Search…' });
+    const list = h('div', { class: 'qlist', style: 'max-height:46vh' }), cnt = h('b', null, '0');
+    const paint = () => {
+      const tp = fTopic.value, ty = fType.value, tx = fText.value.toLowerCase();
+      const rows = usable.filter(q => (!tp || q.topic === tp) && (!ty || q.type === ty) && (!tx || (q.stem + ' ' + (q.case || '')).toLowerCase().includes(tx)));
+      put(list, ...rows.map(q => { const done = inBank.has(q.id); const c = h('input', { type: 'checkbox', disabled: done, checked: sel.has(q.id), onchange: () => { if (c.checked) sel.add(q.id); else sel.delete(q.id); cnt.textContent = sel.size; } });
+        return h('label', { class: 'qitem', style: done ? 'opacity:.55' : '' }, c, h('div', null, h('span', { class: 'badge' }, TYPE_LABEL[q.type]), ' ', h('span', { class: 'tiny muted' }, (topics[q.topic] || q.topic || '') + ' · ' + q.id + (q._kind === 'imported' ? ' · imported' : '') + (done ? ' · already in exam bank' : '') + (excl.includes(q.id) ? ' · hidden from Revision' : '')), h('div', null, q.stem.slice(0, 240)))); }));
+      if (!rows.length) list.append(h('div', { class: 'qitem muted' }, 'No question matches.'));
+    };
+    [fTopic, fType].forEach(x => x.addEventListener('change', paint)); fText.addEventListener('input', paint);
+    const hide = h('input', { type: 'checkbox', checked: true }), rem = h('input', { type: 'checkbox', checked: true });
+    const addBtn = h('button', { class: 'btn btn-primary' }, 'Add to exam bank');
+    addBtn.onclick = async () => {
+      if (!sel.size) { toast('Select at least one question.', 'warn'); return; }
+      addBtn.disabled = true; addBtn.textContent = 'Adding…';
+      const picked = usable.filter(q => sel.has(q.id));
+      const out = picked.map(q => { const o = { type: q.type, stem: q.stem, topic: topics[q.topic] || q.topic || '', difficulty: q.difficulty || 0, explanation: q.explanation || '', source: { kind: q._kind, origId: q.id, course: BASE } };
+        ['case', 'options', 'answer', 'answers', 'pairs'].forEach(k => { if (q[k] !== undefined) o[k] = q[k]; }); return o; });
+      const r = await this.call('examBankSave', { questions: out }, { timeout: 90000 });
+      if (!r.ok) { toast(r.error, 'bad'); addBtn.disabled = false; addBtn.textContent = 'Add to exam bank'; return; }
+      const notes = [h('li', null, r.saved.length + ' question(s) added to the private exam bank.')];
+      if (hide.checked) { const ids = Array.from(new Set(excl.concat(picked.map(q => q.id)))); const x = await this.call('upsert', { collection: 'revexclude', id: 'exclude', data: { ids } }); notes.push(h('li', null, x.ok ? 'Hidden from students’ Revision.' : 'Could not hide from Revision: ' + x.error)); }
+      if (rem.checked) { const imp = picked.filter(q => q._kind === 'imported'); for (const q of imp) await this.call('delete', { collection: 'importedquestions', id: q.id }); if (imp.length) notes.push(h('li', null, imp.length + ' imported question(s) removed from the students’ course bank — they now exist only in the private exam bank.')); }
+      const builtIn = picked.filter(q => q._kind === 'course').length;
+      if (builtIn) notes.push(h('li', null, builtIn + ' built-in question(s) are also stored inside the course file students download. They are hidden from Revision, but not secret — see the note below.'));
+      m.close(); this.bankTab();
+      modal('Added to the exam bank', h('div', null, h('ul', null, notes), builtIn ? h('div', { class: 'msg warn' }, 'For questions that must stay completely secret, use new exam-only questions, or ask for the course file to be rebuilt without these ' + builtIn + ' question(s).') : null, r.errors.length ? h('p', { class: 'msg bad' }, r.errors.length + ' question(s) could not be added: ' + r.errors.map(e => e.error).join('; ')) : null));
+    };
+    put(box, 
+      h('p', { class: 'small muted', style: 'margin-top:0' }, usable.length + ' usable questions' + (shortN ? ' (' + shortN + ' short-answer questions are not offered: they cannot be marked reliably in an official exam)' : '') + '. Loaded from ' + courseUrl),
+      h('div', { class: 'row', style: 'margin-bottom:8px' }, h('div', { style: 'width:260px' }, fTopic), h('div', { style: 'width:190px' }, fType), h('div', { class: 'grow', style: 'min-width:150px' }, fText)),
+      list, h('p', null, 'Selected: ', cnt),
+      h('label', { class: 'chk' }, hide, h('span', null, 'Hide the selected questions from students’ Revision')),
+      h('label', { class: 'chk' }, rem, h('span', null, 'Remove selected ', h('b', null, 'imported'), ' questions from the students’ course bank (they are then kept only in the private exam bank)')),
+      h('div', { class: 'row', style: 'justify-content:flex-end' }, h('button', { class: 'btn', onclick: () => m.close() }, 'Cancel'), addBtn));
+    paint();
+  },
+
+  /* ---------------- results ---------------- */
+  async resultsTab() {
+    this.loading(); await this.loadExams();
+    if (!this.exams.length) return put(this.body, h('h1', null, 'Results'), h('div', { class: 'card' }, 'No exams yet.'));
+    if (!this.resExam || !this.exams.some(e => e.id === this.resExam)) this.resExam = this.exams[0].id;
+    const pick = h('select', { style: 'max-width:420px', onchange: () => { this.resExam = pick.value; this.resultsTab(); } }, this.exams.map(e => h('option', { value: e.id, selected: e.id === this.resExam }, e.title + ' — ' + fmtDT(e.opensAt))));
+    const out = h('div', null, h('p', { class: 'muted' }, 'Loading results…'));
+    put(this.body, h('div', { class: 'row', style: 'margin-bottom:12px' }, h('h1', { style: 'margin:0' }, 'Results'), h('div', { class: 'grow' }, pick)), out);
+    const r = await this.call('examResults', { examId: this.resExam }, { timeout: 60000 });
+    if (!r.ok) return put(out, h('div', { class: 'msg bad' }, r.error));
+    const ex = r.exam, rows = r.results, sub = rows.filter(x => x.status === 'submitted'), pcts = sub.map(x => x.percent).sort((a, b) => a - b);
+    const mean = pcts.length ? Math.round(pcts.reduce((a, b) => a + b, 0) / pcts.length * 10) / 10 : null;
+    const median = pcts.length ? (pcts.length % 2 ? pcts[(pcts.length - 1) / 2] : Math.round((pcts[pcts.length / 2 - 1] + pcts[pcts.length / 2]) / 2 * 10) / 10) : null;
+    const kpi = (v, l) => h('div', { class: 'kpi' }, h('b', null, v === null || v === undefined ? '—' : v), h('span', null, l));
+    const stLabel = x => x.status === 'submitted' ? h('span', { class: 'badge green' }, x.submitMode === 'auto' ? 'Auto-submitted' : 'Submitted') : x.status === 'in_progress' ? h('span', { class: 'badge amber' }, 'Writing') : h('span', { class: 'badge' }, 'Not started');
+    const fText = h('input', { type: 'search', placeholder: 'Search ID or name…' }), fSt = h('select', null, h('option', { value: '' }, 'All'), h('option', { value: 'submitted' }, 'Submitted'), h('option', { value: 'in_progress' }, 'Writing'), h('option', { value: 'not_started' }, 'Not started'));
+    const tbody = h('tbody');
+    let sortK = 'username', sortD = 1;
+    const paint = () => {
+      const t = fText.value.toLowerCase(), s = fSt.value;
+      const list = rows.filter(x => (!s || x.status === s) && (!t || (x.username + ' ' + (x.name || '')).toLowerCase().includes(t)))
+        .sort((a, b) => { const va = a[sortK] == null ? -1 : a[sortK], vb = b[sortK] == null ? -1 : b[sortK]; return (va > vb ? 1 : va < vb ? -1 : 0) * sortD; });
+      put(tbody, ...list.map(x => h('tr', null, h('td', null, h('b', null, x.username)), h('td', null, x.name || ''), h('td', null, stLabel(x)),
+        h('td', null, x.status === 'submitted' ? x.score + ' / ' + x.total : ''), h('td', null, x.status === 'submitted' ? h('b', null, x.percent + '%') : ''),
+        h('td', { class: 'small' }, x.startedAt ? fmtT(x.startedAt) : ''), h('td', { class: 'small' }, x.submittedAt ? fmtT(x.submittedAt) + (x.late ? ' (late)' : '') : x.status === 'in_progress' ? (x.lastSavedAt ? 'last saved ' + fmtT(x.lastSavedAt) : 'no answers yet') : ''),
+        h('td', { class: 'small' }, x.submittedAt && x.startedAt ? fmtDur(x.submittedAt - x.startedAt) : ''),
+        h('td', null, x.leaves ? h('span', { class: 'badge ' + (x.leaves > 2 ? 'red' : 'amber'), title: 'Times the student left the exam window' }, x.leaves) : ''),
+        h('td', null, h('div', { class: 'row', style: 'flex-wrap:nowrap;gap:6px' }, x.status !== 'not_started' ? h('button', { class: 'btn btn-sm', onclick: () => this.attemptDetail(ex, x) }, 'View') : null,
+          x.status !== 'not_started' ? h('button', { class: 'btn btn-sm btn-danger', title: 'Delete this attempt so the student can sit again (technical problems only)', onclick: async () => { if (!await confirmBox('Allow ' + x.username + ' to sit again?', 'This permanently deletes the attempt of ' + (x.name || x.username) + ' (' + (x.status === 'submitted' ? x.percent + '%' : 'in progress') + '). Use only for a documented technical problem.', 'Delete attempt', true)) return; const rr = await this.call('examResetAttempt', { examId: ex.id, username: x.username }); toast(rr.ok ? 'Attempt deleted — the student can sign in and start again.' : rr.error, rr.ok ? 'ok' : 'bad'); this.resultsTab(); } }, 'Re-sit') : null)))));
+      if (!list.length) tbody.append(h('tr', null, h('td', { colspan: 10, class: 'muted' }, 'No students match.')));
+    };
+    fText.addEventListener('input', paint); fSt.addEventListener('change', paint);
+    const th = (k, l) => h('th', { style: 'cursor:pointer', onclick: () => { if (sortK === k) sortD = -sortD; else { sortK = k; sortD = 1; } paint(); } }, l);
+    const csv = () => {
+      const esc = v => { const s = v === null || v === undefined ? '' : String(v); return /[",\n;]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+      const head = ['Student ID', 'Name', 'Status', 'Score', 'Total', 'Percent', 'Correct', 'Incorrect', 'Unanswered', 'Started', 'Submitted', 'Duration (min)', 'Submitted automatically', 'Late', 'Left exam window (times)'];
+      const lines = [head].concat(rows.map(x => [x.username, x.name, x.status, x.score, x.total, x.percent, x.correct, x.incorrect, x.unanswered, x.startedAt ? new Date(x.startedAt).toLocaleString() : '', x.submittedAt ? new Date(x.submittedAt).toLocaleString() : '', x.submittedAt && x.startedAt ? Math.round((x.submittedAt - x.startedAt) / 60000) : '', x.submitMode === 'auto' ? 'yes' : '', x.late ? 'yes' : '', x.leaves || 0]));
+      const blob = new Blob(['﻿' + lines.map(l => l.map(esc).join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
+      const a = h('a', { href: URL.createObjectURL(blob), download: (ex.title.replace(/[^\w-]+/g, '_') || 'exam') + '_results.csv' }); document.body.append(a); a.click(); a.remove();
+    };
+    const items = r.items.map(it => Object.assign(it, { pct: it.n ? Math.round(it.correct / it.n * 100) : 0 })).sort((a, b) => a.pct - b.pct);
+    put(out, 
+      h('div', { class: 'small muted' }, fmtDT(ex.opensAt) + ' → ' + fmtT(ex.closesAt) + ' · ' + ex.durationMin + ' min · code ' + ex.code + ' · ' + (ex.status === 'published' ? 'published' : ex.status)),
+      h('div', { class: 'kpis' }, kpi(rows.length, 'candidates'), kpi(sub.length, 'submitted'), kpi(rows.filter(x => x.status === 'in_progress').length, 'writing now'), kpi(rows.filter(x => x.status === 'not_started').length, 'not started'),
+        kpi(mean === null ? null : mean + '%', 'average'), kpi(median === null ? null : median + '%', 'median'), kpi(pcts.length ? pcts[pcts.length - 1] + '%' : null, 'highest'), kpi(pcts.length ? pcts[0] + '%' : null, 'lowest')),
+      h('div', { class: 'card', style: 'margin-bottom:14px' },
+        h('div', { class: 'row', style: 'margin-bottom:10px' }, h('div', { class: 'grow', style: 'min-width:180px' }, fText), h('div', { style: 'width:170px' }, fSt), h('button', { class: 'btn btn-sm', onclick: () => this.resultsTab() }, '↻ Refresh'), h('button', { class: 'btn btn-sm btn-primary', onclick: csv }, '⬇ Excel (CSV)')),
+        h('div', { class: 'tscroll' }, h('table', { class: 't' }, h('thead', null, h('tr', null, th('username', 'ID'), th('name', 'Name'), th('status', 'Status'), th('score', 'Score'), th('percent', '%'), th('startedAt', 'Started'), th('submittedAt', 'Submitted'), h('th', null, 'Time used'), th('leaves', 'Left window'), h('th', null, ''))), tbody))),
+      h('div', { class: 'card' }, h('h2', null, 'Question analysis'), h('p', { class: 'small muted', style: 'margin-top:0' }, 'Share of submitted papers that answered each question fully correctly — hardest first.'),
+        items.length ? h('div', { class: 'tscroll' }, h('table', { class: 't' }, h('thead', null, h('tr', null, h('th', null, 'Question'), h('th', null, 'Type'), h('th', null, 'Answered by'), h('th', null, 'Fully correct'), h('th', null, 'Blank'))),
+          h('tbody', null, items.map(it => h('tr', null, h('td', null, it.stem), h('td', null, h('span', { class: 'badge' }, TYPE_LABEL[it.type])), h('td', null, it.n), h('td', null, h('b', { style: 'color:' + (it.pct < 40 ? 'var(--red)' : it.pct < 70 ? 'var(--amber)' : 'var(--green)') }, it.pct + '%')), h('td', null, it.unanswered)))))) : h('p', { class: 'muted' }, 'Available once papers are submitted.')));
+    paint();
+    clearTimeout(this._rt);
+    if (ex.status === 'published' && Date.now() < ex.closesAt + 30 * 60000) this._rt = setTimeout(() => { if (this.tab === 'results' && document.body.contains(out)) this.resultsTab(); }, 30000);
+  },
+  async attemptDetail(ex, x) {
+    const r = await this.call('examAttemptDetail', { examId: ex.id, username: x.username });
+    if (!r.ok) return toast(r.error, 'bad');
+    const a = r.attempt, disp = a.displayResponses || {};
+    const blocks = a.questions.map((q, i) => {
+      const p = r.paper[i], ans = (a.answers || [])[i] || {}, ord = a.optionOrders[i], resp = disp[i];
+      const mark = a.status === 'submitted' ? (ans.answered ? (ans.correct ? h('span', { class: 'ans-ok' }, '✓ correct') : ans.mark ? h('span', { class: 'ans-bad', style: 'color:var(--amber)' }, 'partly correct (' + ans.mark + ')') : h('span', { class: 'ans-bad' }, '✗ incorrect')) : h('span', { class: 'muted' }, 'not answered')) : null;
+      const body = [];
+      if (['mcq', 'vignette', 'selectall'].includes(q.type)) {
+        const corr = q.type === 'selectall' ? q.answers.map(k => ord.indexOf(k)) : [ord.indexOf(q.answer)];
+        const chosen = q.type === 'selectall' ? (resp || []) : resp === undefined ? [] : [resp];
+        p.options.forEach((o, k) => body.push(h('div', { class: 'o' + (corr.includes(k) ? ' c' : chosen.includes(k) ? ' w' : '') }, LETTERS[k] + '. ' + o, chosen.includes(k) ? '  ← student' : '', corr.includes(k) ? '  (correct)' : '')));
+      }
+      if (q.type === 'tf') body.push(h('div', null, 'Student: ', h('b', null, resp === undefined ? '—' : resp ? 'True' : 'False'), ' · Correct: ', h('b', null, q.answer ? 'True' : 'False')));
+      if (q.type === 'fillblank') q.answers.forEach((acc, k) => body.push(h('div', null, 'Blank ' + (k + 1) + ': student “', h('b', null, (resp || [])[k] || ''), '” · accepted: ', acc.join(' / '))));
+      if (q.type === 'matching') p.left.forEach((l, li) => { const correctJ = ord.right.indexOf(ord.left[li]); const got = resp ? resp[li] : undefined;
+        body.push(h('div', { class: 'o' + (got === correctJ ? ' c' : got !== undefined ? ' w' : '') }, l + ' → ' + (got !== undefined ? p.right[got] : '—'), got !== correctJ ? '  (correct: ' + p.right[correctJ] + ')' : '')); });
+      return h('div', { class: 'dq' }, h('div', { class: 'row' }, h('b', null, 'Q' + (i + 1)), h('span', { class: 'badge' }, TYPE_LABEL[q.type]), h('span', { class: 'right' }, mark)),
+        q.case ? h('div', { class: 'case', style: 'margin-top:8px' }, q.case) : null, h('p', { style: 'font-weight:600' }, q.stem), body, q.explanation ? h('p', { class: 'small muted' }, 'Explanation: ' + q.explanation) : null);
+    });
+    modal((x.name || x.username) + ' — ' + (a.status === 'submitted' ? a.score + ' / ' + a.total + ' (' + a.percent + '%)' : 'in progress'), h('div', null,
+      h('p', { class: 'small muted' }, 'ID ' + x.username + ' · started ' + fmtDT(a.startedAt) + (a.submittedAt ? ' · submitted ' + fmtT(a.submittedAt) + (a.submitMode === 'auto' ? ' (automatically)' : '') : '') + ' · left the exam window ' + (a.leaves || 0) + ' time(s) · ' + (a.saveCount || 0) + ' saves'), blocks,
+      h('button', { class: 'btn', onclick: () => window.print() }, '🖨 Print')), { wide: true });
+  },
+  helpTab() {
+    put(this.body, h('div', { class: 'card' }, h('h1', null, 'How official exams work'),
+      h('ol', null,
+        h('li', null, h('b', null, 'Exam question bank. '), 'Add questions from the course question bank, write new ones, or import them. The bank is private: it is stored on the server and never sent to students.'),
+        h('li', null, h('b', null, 'Create the exam. '), 'Choose questions, the window (opens/closes), the time allowed, the candidates and an access code. Publish it.'),
+        h('li', null, h('b', null, 'In the exam room. '), 'Students open this exam page, enter the access code, their student ID and password. Announce the code only at the start.'),
+        h('li', null, h('b', null, 'During the exam. '), 'Answers are saved on the server every few seconds. The timer runs on the server. When time is over, saved answers are submitted automatically. If enabled, candidates cannot use the teaching platform during the window.'),
+        h('li', null, h('b', null, 'Results. '), 'Watch progress live, export to Excel, open any paper, and allow a re-sit only after a documented technical problem.')),
+      h('h2', null, 'What is enforced by the server (real security)'),
+      h('ul', null, h('li', null, 'Answers, explanations and the exam bank never reach a student’s browser during the exam.'), h('li', null, 'The exam login works only for the exam — it cannot open course content.'), h('li', null, 'One attempt, time limit, closing time, auto-submission and grading.'), h('li', null, 'Optional closure of the teaching platform for candidates during the window.')),
+      h('h2', null, 'What a web page cannot prevent'),
+      h('p', null, 'Other devices, other browsers or another person. Leaving the exam window is recorded (the “Left window” column), but it cannot be blocked by a web page. For high-stakes exams use supervised computer labs, ideally with Safe Exam Browser locked to this page’s address, and invigilators.'),
+      h('h2', null, 'Links'),
+      h('p', { class: 'small' }, 'Students: ', h('code', null, location.origin + location.pathname + (MODULE !== CONFIG.defaultModule ? '?m=' + MODULE : ''))),
+      h('p', { class: 'small' }, 'Teaching platform used for “Add from the course question bank”: ', h('code', null, localStorage.getItem('xm_course_' + BASE) || MOD.courseUrl), ' ',
+        h('button', { class: 'btn btn-sm', onclick: () => { const v = prompt('Teaching platform link', localStorage.getItem('xm_course_' + BASE) || MOD.courseUrl); if (v) { localStorage.setItem('xm_course_' + BASE, v.trim()); this.helpTab(); } } }, 'Change'))));
+  }
+};
+
+/* ---------- boot ---------- */
+(function boot() {
+  if (location.hash === '#teacher' || SS.get('tt', null)) Teacher.resumeOrLogin(); else Stu.start();
+})();
+</script>
+</body>
+</html>
