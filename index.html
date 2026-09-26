@@ -310,6 +310,7 @@ const Stu = {
   async resume(fromStart) {
     const r = await API.call('examStart', { etoken: this.s.etoken }, { timeout: 45000 });
     if (!r.ok) {
+      if (r.code === 'examactive') return this.elsewhere(r.error);
       if (r.code === 'examauth' || r.code === 'examgone') { this.clear(); return this.loginView(r.error); }
       if (r.code === 'window' && !fromStart) return this.lobby(this.s.exam);
       if (fromStart) { toast(r.error || 'Could not start the exam.', 'bad'); return; }
@@ -318,6 +319,7 @@ const Stu = {
     this.offset = (r.attempt.serverTime || Date.now()) - Date.now();
     this.s.exam = r.exam; SS.set('sess', this.s);
     if (r.attempt.status === 'submitted' || !r.paper) return this.doneView(r.attempt);
+    if (!(await this.tabCheck())) return this.elsewhere('This exam is already open in another tab or window of this browser. Close this one and continue in the other.', true);
     this.attempt = r.attempt; this.paper = r.paper;
     const local = SS.get('resp', null);
     this.resp = Object.assign({}, r.responses || {}, local && local.etoken === this.s.etoken ? local.resp : {});
@@ -359,7 +361,7 @@ const Stu = {
           h('button', { class: 'btn btn-navy', style: 'width:100%;justify-content:center;margin-top:14px', onclick: () => this.review() }, 'Review & submit')))));
     this.paintQ(); this.paintNav(); this.tick();
     clearInterval(this.timerId); this.timerId = setInterval(() => this.tick(), 500);
-    clearInterval(this.saveId); this.saveId = setInterval(() => { if (this.dirty) this.save(); }, 20000);
+    clearInterval(this.saveId); this.saveId = setInterval(() => this.save(true), 30000); // also a heartbeat: this device keeps the exam
     if (this.dirty) this.scheduleSave(500);
     this.guards(true);
   },
@@ -420,8 +422,8 @@ const Stu = {
     if (left <= 0 && !this.submitting) this.submit(true);
   },
   scheduleSave(ms) { clearTimeout(this._sd); this._sd = setTimeout(() => this.save(), ms); },
-  async save() {
-    if (this.saving || this.submitting || !this.dirty) return;
+  async save(beat) {
+    if (this.saving || this.submitting || (!this.dirty && !beat)) return;
     this.saving = true; const snap = JSON.stringify(this.resp);
     this.saveEl.className = 'save'; this.saveEl.textContent = 'Saving…';
     const r = await API.call('examSave', { etoken: this.s.etoken, responses: this.resp, leaves: this.leaves }, { timeout: 25000 });
@@ -435,6 +437,7 @@ const Stu = {
       if (this.dirty) this.scheduleSave(800);
     } else {
       if (r.code === 'examauth') { this.saveEl.className = 'save bad'; this.saveEl.textContent = 'Session ended'; return this.sessionLost(r.error); }
+      if (r.code === 'examactive') return this.elsewhere(r.error);
       this.saveEl.className = 'save bad'; this.saveEl.textContent = 'Not saved — retrying';
       this.scheduleSave(5000);
     }
@@ -458,13 +461,14 @@ const Stu = {
       const r = await API.call('examSubmit', { etoken: this.s.etoken, responses: this.resp, leaves: this.leaves, auto: !!auto }, { timeout: 30000 });
       if (r.ok) { wait.close(); return this.finished(r.attempt); }
       if (r.code === 'examauth') { wait.close(); return this.sessionLost('Your exam was already submitted or your session has ended.'); }
+      if (r.code === 'examactive') { wait.close(); this.submitting = false; return this.elsewhere(r.error); }
       const st = document.getElementById('x-subst'); if (st) { st.className = 'msg bad'; st.textContent = (r.error || 'Not submitted yet.') + ' Retrying in 5 seconds — do not close this window.'; }
       await new Promise(res => setTimeout(res, 5000));
     }
     wait.close(); this.submitting = false;
     toast('Submission failed. Tell the invigilator immediately. Your saved answers are on the server.', 'bad');
   },
-  finished(attempt) { this.guards(false); clearInterval(this.timerId); clearInterval(this.saveId); try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) { } this.clear(); this.doneView(attempt); },
+  finished(attempt) { this.closeTab(); this.guards(false); clearInterval(this.timerId); clearInterval(this.saveId); try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) { } this.clear(); this.doneView(attempt); },
   sessionLost(text) { this.guards(false); clearInterval(this.timerId); clearInterval(this.saveId); this.clear(); this.loginView(text + ' Sign in again to see your status.', 'warn'); },
   doneView(att) {
     this.clear();
@@ -477,6 +481,29 @@ const Stu = {
       scoreBox, h('p', { class: 'small muted' }, scoreBox ? 'Final results are confirmed by the examiner.' : 'Your result will be released by the examiner.'),
       h('p', { class: 'small' }, 'You may now close this window.'),
       h('button', { class: 'btn', onclick: () => this.loginView() }, 'Finish'))));
+  },
+  /* ONE device per student. Other devices/browsers are refused by the server; other tabs of THIS browser are detected here
+     (a duplicated tab carries the same session, so the server alone cannot tell them apart). */
+  async tabCheck() {
+    this.closeTab();
+    let ch; try { ch = new BroadcastChannel('xm_' + MODULE + '_' + this.s.student.username); } catch (e) { return true; }
+    const id = Math.random().toString(36).slice(2); let busy = false;
+    ch.onmessage = e => { const d = e.data || {}; if (d.t === 'here' && d.to === id) busy = true; };
+    ch.postMessage({ t: 'hello', id });
+    await new Promise(r => setTimeout(r, 700));
+    if (busy) { ch.close(); return false; }
+    ch.onmessage = e => { const d = e.data || {}; if (d.t === 'hello' && d.id !== id && this.paper) ch.postMessage({ t: 'here', to: d.id }); };
+    this._ch = ch; return true;
+  },
+  closeTab() { if (this._ch) { try { this._ch.close(); } catch (e) { } this._ch = null; } },
+  elsewhere(text, sameBrowser) {
+    this.closeTab(); this.guards(false); clearInterval(this.timerId); clearInterval(this.saveId); clearTimeout(this._sd);
+    if (!sameBrowser) this.clear(); else { this.paper = null; this.attempt = null; }
+    try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) { }
+    mount(h('div', { class: 'gate' }, h('div', { class: 'card', style: 'text-align:center;max-width:520px' },
+      h('div', { class: 'done-ic', style: 'background:var(--amber-l);color:var(--amber)', html: ICON.lock }), h('h1', null, 'Exam open elsewhere'),
+      h('p', null, text), h('p', { class: 'small muted' }, 'Only one device or window may be used for the exam. Every attempt to open it elsewhere is reported to the examiner.'),
+      sameBrowser ? null : h('button', { class: 'btn', onclick: () => this.loginView() }, 'Back to sign-in'))));
   },
   clear() { SS.del('sess'); SS.del('started'); SS.del('resp'); SS.del('flags'); SS.del('cur'); SS.del('leaves'); this.paper = null; this.attempt = null; },
   async signOut() { if (this.s) API.call('examLogout', { etoken: this.s.etoken }); this.clear(); this.s = null; this.loginView('You have signed out.', 'info'); },
@@ -831,16 +858,19 @@ const Teacher = {
         h('td', { class: 'small' }, x.startedAt ? fmtT(x.startedAt) : ''), h('td', { class: 'small' }, x.submittedAt ? fmtT(x.submittedAt) + (x.late ? ' (late)' : '') : x.status === 'in_progress' ? (x.lastSavedAt ? 'last saved ' + fmtT(x.lastSavedAt) : 'no answers yet') : ''),
         h('td', { class: 'small' }, x.submittedAt && x.startedAt ? fmtDur(x.submittedAt - x.startedAt) : ''),
         h('td', null, x.leaves ? h('span', { class: 'badge ' + (x.leaves > 2 ? 'red' : 'amber'), title: 'Times the student left the exam window' }, x.leaves) : ''),
+        h('td', { class: 'small' }, x.status === 'not_started' ? '' : h('span', { title: 'Devices used · sign-ins refused because the exam was open elsewhere · device changes' },
+          (x.devices || 0) + ' device' + (x.devices === 1 ? '' : 's'), x.blocked ? h('span', { class: 'badge red', style: 'margin-left:4px' }, x.blocked + ' refused') : null, x.takeovers ? h('span', { class: 'badge amber', style: 'margin-left:4px' }, x.takeovers + ' switched') : null)),
         h('td', null, h('div', { class: 'row', style: 'flex-wrap:nowrap;gap:6px' }, x.status !== 'not_started' ? h('button', { class: 'btn btn-sm', onclick: () => this.attemptDetail(ex, x) }, 'View') : null,
+          x.status === 'in_progress' ? h('button', { class: 'btn btn-sm', title: 'Let the student continue on another device now (e.g. the first computer failed)', onclick: async () => { if (!await confirmBox('Release the exam of ' + (x.name || x.username) + '?', 'Use this only when the student’s current device has failed. The student can then sign in on another device at once and continue with the saved answers; the old device is closed.', 'Release')) return; const rr = await this.call('examReleaseSession', { examId: ex.id, username: x.username }); toast(rr.ok ? 'Released — the student can sign in on another device now.' : rr.error, rr.ok ? 'ok' : 'bad'); this.resultsTab(); } }, 'Release') : null,
           x.status !== 'not_started' ? h('button', { class: 'btn btn-sm btn-danger', title: 'Delete this attempt so the student can sit again (technical problems only)', onclick: async () => { if (!await confirmBox('Allow ' + x.username + ' to sit again?', 'This permanently deletes the attempt of ' + (x.name || x.username) + ' (' + (x.status === 'submitted' ? x.percent + '%' : 'in progress') + '). Use only for a documented technical problem.', 'Delete attempt', true)) return; const rr = await this.call('examResetAttempt', { examId: ex.id, username: x.username }); toast(rr.ok ? 'Attempt deleted — the student can sign in and start again.' : rr.error, rr.ok ? 'ok' : 'bad'); this.resultsTab(); } }, 'Re-sit') : null)))));
-      if (!list.length) tbody.append(h('tr', null, h('td', { colspan: 10, class: 'muted' }, 'No students match.')));
+      if (!list.length) tbody.append(h('tr', null, h('td', { colspan: 11, class: 'muted' }, 'No students match.')));
     };
     fText.addEventListener('input', paint); fSt.addEventListener('change', paint);
     const th = (k, l) => h('th', { style: 'cursor:pointer', onclick: () => { if (sortK === k) sortD = -sortD; else { sortK = k; sortD = 1; } paint(); } }, l);
     const csv = () => {
       const esc = v => { const s = v === null || v === undefined ? '' : String(v); return /[",\n;]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
-      const head = ['Student ID', 'Name', 'Status', 'Score', 'Total', 'Percent', 'Correct', 'Incorrect', 'Unanswered', 'Started', 'Submitted', 'Duration (min)', 'Submitted automatically', 'Late', 'Left exam window (times)'];
-      const lines = [head].concat(rows.map(x => [x.username, x.name, x.status, x.score, x.total, x.percent, x.correct, x.incorrect, x.unanswered, x.startedAt ? new Date(x.startedAt).toLocaleString() : '', x.submittedAt ? new Date(x.submittedAt).toLocaleString() : '', x.submittedAt && x.startedAt ? Math.round((x.submittedAt - x.startedAt) / 60000) : '', x.submitMode === 'auto' ? 'yes' : '', x.late ? 'yes' : '', x.leaves || 0]));
+      const head = ['Student ID', 'Name', 'Status', 'Score', 'Total', 'Percent', 'Correct', 'Incorrect', 'Unanswered', 'Started', 'Submitted', 'Duration (min)', 'Submitted automatically', 'Late', 'Left exam window (times)', 'Devices used', 'Sign-ins refused (open elsewhere)', 'Device switches', 'Released by teacher'];
+      const lines = [head].concat(rows.map(x => [x.username, x.name, x.status, x.score, x.total, x.percent, x.correct, x.incorrect, x.unanswered, x.startedAt ? new Date(x.startedAt).toLocaleString() : '', x.submittedAt ? new Date(x.submittedAt).toLocaleString() : '', x.submittedAt && x.startedAt ? Math.round((x.submittedAt - x.startedAt) / 60000) : '', x.submitMode === 'auto' ? 'yes' : '', x.late ? 'yes' : '', x.leaves || 0, x.devices || 0, x.blocked || 0, x.takeovers || 0, x.releases || 0]));
       const blob = new Blob(['﻿' + lines.map(l => l.map(esc).join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
       const a = h('a', { href: URL.createObjectURL(blob), download: (ex.title.replace(/[^\w-]+/g, '_') || 'exam') + '_results.csv' }); document.body.append(a); a.click(); a.remove();
     };
@@ -851,7 +881,7 @@ const Teacher = {
         kpi(mean === null ? null : mean + '%', 'average'), kpi(median === null ? null : median + '%', 'median'), kpi(pcts.length ? pcts[pcts.length - 1] + '%' : null, 'highest'), kpi(pcts.length ? pcts[0] + '%' : null, 'lowest')),
       h('div', { class: 'card', style: 'margin-bottom:14px' },
         h('div', { class: 'row', style: 'margin-bottom:10px' }, h('div', { class: 'grow', style: 'min-width:180px' }, fText), h('div', { style: 'width:170px' }, fSt), h('button', { class: 'btn btn-sm', onclick: () => this.resultsTab() }, '↻ Refresh'), h('button', { class: 'btn btn-sm btn-primary', onclick: csv }, '⬇ Excel (CSV)')),
-        h('div', { class: 'tscroll' }, h('table', { class: 't' }, h('thead', null, h('tr', null, th('username', 'ID'), th('name', 'Name'), th('status', 'Status'), th('score', 'Score'), th('percent', '%'), th('startedAt', 'Started'), th('submittedAt', 'Submitted'), h('th', null, 'Time used'), th('leaves', 'Left window'), h('th', null, ''))), tbody))),
+        h('div', { class: 'tscroll' }, h('table', { class: 't' }, h('thead', null, h('tr', null, th('username', 'ID'), th('name', 'Name'), th('status', 'Status'), th('score', 'Score'), th('percent', '%'), th('startedAt', 'Started'), th('submittedAt', 'Submitted'), h('th', null, 'Time used'), th('leaves', 'Left window'), th('devices', 'Devices'), h('th', null, ''))), tbody))),
       h('div', { class: 'card' }, h('h2', null, 'Question analysis'), h('p', { class: 'small muted', style: 'margin-top:0' }, 'Share of submitted papers that answered each question fully correctly — hardest first.'),
         items.length ? h('div', { class: 'tscroll' }, h('table', { class: 't' }, h('thead', null, h('tr', null, h('th', null, 'Question'), h('th', null, 'Type'), h('th', null, 'Answered by'), h('th', null, 'Fully correct'), h('th', null, 'Blank'))),
           h('tbody', null, items.map(it => h('tr', null, h('td', null, it.stem), h('td', null, h('span', { class: 'badge' }, TYPE_LABEL[it.type])), h('td', null, it.n), h('td', null, h('b', { style: 'color:' + (it.pct < 40 ? 'var(--red)' : it.pct < 70 ? 'var(--amber)' : 'var(--green)') }, it.pct + '%')), h('td', null, it.unanswered)))))) : h('p', { class: 'muted' }, 'Available once papers are submitted.')));
@@ -880,7 +910,7 @@ const Teacher = {
         q.case ? h('div', { class: 'case', style: 'margin-top:8px' }, q.case) : null, h('p', { style: 'font-weight:600' }, q.stem), body, q.explanation ? h('p', { class: 'small muted' }, 'Explanation: ' + q.explanation) : null);
     });
     modal((x.name || x.username) + ' — ' + (a.status === 'submitted' ? a.score + ' / ' + a.total + ' (' + a.percent + '%)' : 'in progress'), h('div', null,
-      h('p', { class: 'small muted' }, 'ID ' + x.username + ' · started ' + fmtDT(a.startedAt) + (a.submittedAt ? ' · submitted ' + fmtT(a.submittedAt) + (a.submitMode === 'auto' ? ' (automatically)' : '') : '') + ' · left the exam window ' + (a.leaves || 0) + ' time(s) · ' + (a.saveCount || 0) + ' saves'), blocks,
+      h('p', { class: 'small muted' }, 'ID ' + x.username + ' · started ' + fmtDT(a.startedAt) + (a.submittedAt ? ' · submitted ' + fmtT(a.submittedAt) + (a.submitMode === 'auto' ? ' (automatically)' : '') : '') + ' · left the exam window ' + (a.leaves || 0) + ' time(s) · ' + (a.devices || 0) + ' device(s), ' + (a.blocked || 0) + ' refused sign-in(s) · ' + (a.saveCount || 0) + ' saves'), blocks,
       h('button', { class: 'btn', onclick: () => window.print() }, '🖨 Print')), { wide: true });
   },
   helpTab() {
@@ -892,7 +922,7 @@ const Teacher = {
         h('li', null, h('b', null, 'During the exam. '), 'Answers are saved on the server every few seconds. The timer runs on the server. When time is over, saved answers are submitted automatically. If enabled, candidates cannot use the teaching platform during the window.'),
         h('li', null, h('b', null, 'Results. '), 'Watch progress live, export to Excel, open any paper, and allow a re-sit only after a documented technical problem.')),
       h('h2', null, 'What is enforced by the server (real security)'),
-      h('ul', null, h('li', null, 'Answers, explanations and the exam bank never reach a student’s browser during the exam.'), h('li', null, 'The exam login works only for the exam — it cannot open course content.'), h('li', null, 'One attempt, time limit, closing time, auto-submission and grading.'), h('li', null, 'Optional closure of the teaching platform for candidates during the window.')),
+      h('ul', null, h('li', null, 'Answers, explanations and the exam bank never reach a student’s browser during the exam.'), h('li', null, 'The exam login works only for the exam — it cannot open course content.'), h('li', null, 'One attempt, time limit, closing time, auto-submission and grading.'), h('li', null, 'One device per student: while the exam is open on one device, sign-ins elsewhere are refused and reported. If a device fails, use “Release” in Results (or wait 2 minutes).'), h('li', null, 'Optional closure of the teaching platform for candidates during the window.')),
       h('h2', null, 'What a web page cannot prevent'),
       h('p', null, 'Other devices, other browsers or another person. Leaving the exam window is recorded (the “Left window” column), but it cannot be blocked by a web page. For high-stakes exams use supervised computer labs, ideally with Safe Exam Browser locked to this page’s address, and invigilators.'),
       h('h2', null, 'Links'),
