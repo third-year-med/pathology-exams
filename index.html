@@ -57,7 +57,9 @@ h1,h2,h3{color:var(--navy);line-height:1.25}h1{font-size:1.45rem;margin:0 0 6px}
 .qhead{display:flex;align-items:center;gap:8px 10px;margin-bottom:12px;flex-wrap:wrap}.qnum{font-weight:800;color:var(--navy)}
 .case{background:#f4f8fb;border-left:0;border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:.96rem}
 .stem{font-size:1.08rem;font-weight:600;margin-bottom:16px;white-space:pre-wrap}
-.qimg{max-width:100%;max-height:360px;border-radius:10px;border:1px solid var(--line);margin:0 0 14px;cursor:zoom-in;display:block}
+.piclist{display:grid;gap:10px;max-height:52vh;overflow:auto;margin-bottom:10px}.picrow{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--line);border-radius:10px;padding:10px}.picrow .qthumb{max-width:150px;max-height:120px;margin:0}
+.qthumb{max-width:160px;max-height:110px;border-radius:6px;border:1px solid var(--line);cursor:zoom-in;display:block;margin-top:6px}
+.qimg{max-width:100%;max-height:min(62vh,560px);border-radius:10px;border:1px solid var(--line);margin:0 0 14px;cursor:zoom-in;display:block}
 .opts{display:flex;flex-direction:column;gap:9px}
 .opt{display:flex;gap:12px;align-items:flex-start;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff;text-align:left;width:100%}
 .opt:hover{border-color:#aebfd0}.opt.sel{border-color:var(--teal);background:var(--teal-l)}
@@ -106,6 +108,8 @@ table.t tr:hover td{background:#fafcfd}
 .dq .o{padding:4px 8px;border-radius:7px;margin:3px 0}.dq .o.c{background:var(--green-l)}.dq .o.w{background:var(--red-l)}
 .zoom{position:fixed;inset:0;background:rgba(0,0,0,.85);display:grid;place-items:center;z-index:200;cursor:zoom-out}.zoom img{max-width:95vw;max-height:92vh}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.front{max-width:820px;margin:0 auto;padding:28px 16px}.front-head h1{margin:14px 0 2px}
+.front-list .card{margin:12px 0}.front-ex.off{opacity:.65}.front-ex h2{font-size:1.15rem}
 </style>
 </head>
 <body>
@@ -124,12 +128,15 @@ const CONFIG = {
   defaultModule: 'inflhealing',
   modules: {
     inflhealing: { title: 'Inflammation & Healing', courseUrl: 'https://third-year-med.github.io/inflammation-healing/' },
-    cellinjury: { title: 'Cell Injury & Cell Death', courseUrl: 'https://third-year-med.github.io/cell-injury-teaching-platform/' }
+    cellinjury: { title: 'Cell Injury & Cell Death', courseUrl: 'https://third-year-med.github.io/cell-injury-teaching-platform/' },
+    exams: { title: 'Official Exams', courseUrl: '' }   // a group's combined exams (questions from several modules)
   },
+  platformHome: 'https://third-year-med.github.io/Interactive-pathology-platform/',
   department: 'Department of Pathology',
   author: 'Dr. Wesam Alzwawy'
 };
 const QS = new URLSearchParams(location.search);
+const GROUP = (QS.get('g') || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 24);   // the exam front page of a group (?g=<link code>)
 const MODULE = (QS.get('m') || CONFIG.defaultModule).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 40) || CONFIG.defaultModule;
 const BASE = MODULE.split('-')[0];
 const MOD = CONFIG.modules[BASE] || { title: MODULE, courseUrl: '' };
@@ -191,7 +198,7 @@ function confirmBox(title, text, okLabel, danger) {
       h('button', { class: 'btn ' + (danger ? 'btn-danger' : 'btn-primary'), onclick: () => { done = true; m.close(); res(true); } }, okLabel || 'OK'))), { onClose: () => { if (!done) res(false); } });
   });
 }
-function zoomImg(src) { const z = h('div', { class: 'zoom', onclick: () => z.remove() }, h('img', { src, alt: 'Enlarged image' })); document.body.append(z); }
+function zoomImg(src) { const z = h('div', { class: 'zoom', onclick: () => z.remove() }, h('img', { src, alt: 'Enlarged image', referrerpolicy: 'no-referrer' })); document.body.append(z); }
 
 /* ---------- backend ---------- */
 const API = {
@@ -259,6 +266,7 @@ const Stu = {
     mount(h('div', { class: 'gate' }, h('div', { class: 'card' }, brand(), h('h1', null, 'Sign in to your exam'),
       h('p', { class: 'muted small', style: 'margin-top:0' }, 'Use the same student ID and password as the teaching platform. The exam code is announced in the exam room.'),
       form,
+      h('p', { class: 'small', style: 'margin:12px 0 0' }, h('a', { href: location.pathname + (GROUP ? '?g=' + encodeURIComponent(GROUP) : '') }, '← All exams' + (GROUP ? ' of my group' : ''))),
       h('p', { class: 'tiny muted', style: 'margin:16px 0 0;display:flex;gap:6px;align-items:flex-start' }, h('span', { html: ICON.lock, style: 'width:14px;flex:none' }), 'This exam page is separate from the teaching platform. While the exam is running, the teaching material is closed for candidates.'),
       h('div', { style: 'text-align:right;margin-top:10px' }, h('button', { class: 'btn-link tiny', type: 'button', onclick: () => Teacher.loginView() }, 'Teacher sign-in')))));
     setTimeout(() => (code.value ? user : code).focus(), 30);
@@ -377,7 +385,7 @@ const Stu = {
     const i = this.cur, q = this.paper[i], r = this.resp[i];
     const body = [];
     if (q.case) body.push(h('div', { class: 'case' }, h('b', null, 'Case: '), q.case));
-    if (q.image) body.push(h('img', { class: 'qimg', src: q.image, alt: 'Question image — click to enlarge', onclick: () => zoomImg(q.image) }));
+    if (q.image) body.push(h('img', { class: 'qimg', src: q.image, alt: 'Question image — click to enlarge', referrerpolicy: 'no-referrer', onclick: () => zoomImg(q.image) }));
     if (q.type === 'fillblank') {
       const parts = String(q.stem).split(/_{3,}/), vals = Array.isArray(r) ? r.slice() : [];
       const inputs = [];
@@ -559,17 +567,47 @@ function printAnswerKey(list, title) {
   w.document.close(); setTimeout(() => w.print(), 400);
 }
 
+/** The question data of a teaching module page (decrypted with that module's content key). */
+async function loadCoursePage(url, key) {
+  const html = await (await fetch(url, { cache: 'no-store' })).text();
+  const mm = html.match(/<script id="neo-enc" type="application\/json">([\s\S]*?)<\/script>/);
+  if (mm) {
+    if (!key) throw new Error('No course key for this module — open the exam manager again from the Teacher Dashboard.');
+    const enc = JSON.parse(mm[1]), b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+    const k = await crypto.subtle.importKey('raw', b64(key), { name: 'AES-GCM' }, false, ['decrypt']);
+    return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64(enc.iv) }, k, b64(enc.ct))));
+  }
+  const pm = html.match(/<script id="neo-data" type="application\/json">([\s\S]*?)<\/script>/); if (!pm) throw new Error('No course data found at ' + url);
+  return JSON.parse(pm[1]);
+}
+function topicLabels(data) { const o = {}; (data.topics || []).forEach(t => { o[t.id] = (t.num ? String(t.num).padStart(2, '0') + ' · ' : '') + t.title; }); return o; }
+/** A picture from the computer, made smaller (longest side ≤ max px, JPEG) so it uploads quickly; never stored in the sheet. */
+function shrinkImage(file, max) {
+  return new Promise((ok, bad) => {
+    if (!/^image\//.test(file.type)) return bad(new Error(file.name + ' is not a picture.'));
+    const img = new Image(), url = URL.createObjectURL(file);
+    img.onload = () => { URL.revokeObjectURL(url); const r = Math.min(1, (max || 2000) / Math.max(img.naturalWidth, img.naturalHeight));
+      const c = document.createElement('canvas'); c.width = Math.round(img.naturalWidth * r); c.height = Math.round(img.naturalHeight * r);
+      const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0, c.width, c.height); ok(c.toDataURL('image/jpeg', 0.88)); };
+    img.onerror = () => { URL.revokeObjectURL(url); bad(new Error(file.name + ' could not be read as a picture.')); };
+    img.src = url;
+  });
+}
+function qThumb(src) { return h('img', { class: 'qthumb', src, alt: 'Question picture', referrerpolicy: 'no-referrer', onclick: () => zoomImg(src) }); }
+
 /* ==========================================================================
    TEACHER
    ========================================================================== */
 const Teacher = {
-  token: '', contentKey: '', tab: 'exams', bank: [], exams: [], students: null,
+  token: '', contentKey: '', keys: {}, tab: 'exams', bank: [], exams: [], students: null,
   loginView(msg) {
     const pw = h('input', { type: 'password', autocomplete: 'current-password', placeholder: 'Teacher password for this module' });
     const m = h('div', { class: 'msg bad', role: 'alert' }, msg || '');
     const btn = h('button', { class: 'btn btn-navy', type: 'submit', style: 'width:100%;justify-content:center' }, 'Sign in');
     mount(h('div', { class: 'gate' }, h('div', { class: 'card' }, brand('Examiner · ' + MOD.title), h('h1', null, 'Teacher sign-in'),
-      h('p', { class: 'small muted', style: 'margin-top:0' }, 'The same teacher password as the ' + MOD.title + ' teaching platform.'),
+      h('p', { class: 'small', style: 'margin-top:0' }, 'Teachers open the exam manager from the platform: ', h('b', null, 'Platform Home → Teacher Sign-In → Teacher Dashboard → 📝 Official Exams → Manage exams'), ' — no second password.'),
+      h('a', { class: 'btn btn-navy', href: CONFIG.platformHome + '#/teacher', style: 'width:100%;justify-content:center;margin-bottom:14px' }, 'Sign in through the Teacher Dashboard →'),
+      h('p', { class: 'small muted' }, 'Module teacher password (only if your administrator has enabled it):'),
       h('form', { onsubmit: async e => {
         e.preventDefault(); if (!pw.value) return; btn.disabled = true; m.textContent = '';
         const r = await API.call('login', { password: pw.value }); btn.disabled = false;
@@ -582,7 +620,7 @@ const Teacher = {
       h('div', { style: 'text-align:right;margin-top:10px' }, h('button', { class: 'btn-link tiny', onclick: () => Stu.loginView() }, '← Student sign-in')))));
     setTimeout(() => pw.focus(), 30);
   },
-  resumeOrLogin() { const t = SS.get('tt', null); if (t && t.token) { this.token = t.token; this.contentKey = t.ck || ''; this.shell(); } else this.loginView(); },
+  resumeOrLogin() { const t = SS.get('tt', null); if (t && t.token) { this.token = t.token; this.contentKey = t.ck || ''; this.keys = t.keys || {}; this.shell(); } else this.loginView(); },
   async call(action, p, o) {
     const r = await API.call(action, Object.assign({ token: this.token }, p || {}), o);
     if (!r.ok && (r.code === 'auth' || r.code === 'studentauth')) { SS.del('tt'); this.loginView('Your teacher session has ended — please sign in again.'); throw new Error('auth'); }
@@ -591,7 +629,8 @@ const Teacher = {
   shell() {
     const tabs = [['exams', 'Exams'], ['bank', 'Exam question bank'], ['results', 'Results'], ['help', 'Help']];
     this.body = h('div', { class: 'twrap' });
-    mount(h('div', { class: 'tbar' }, h('span', { class: 'ttl' }, 'Official Exams · ' + MOD.title),
+    const tt = SS.get('tt', null) || {};
+    mount(h('div', { class: 'tbar' }, tt.home ? h('a', { class: 'btn btn-sm', href: tt.home, style: 'background:transparent;color:#fff;border-color:#4a6789;margin-right:6px' }, '← Teacher Dashboard') : null, h('span', { class: 'ttl' }, 'Official Exams · ' + (BASE === 'exams' ? 'Combined exams' : MOD.title) + (MODULE !== BASE ? ' · ' + MODULE.slice(BASE.length + 1) : '')),
       tabs.map(([k, l]) => h('button', { class: 'tab' + (this.tab === k ? ' on' : ''), onclick: () => { this.tab = k; this.shell(); } }, l)),
       h('button', { class: 'btn btn-sm right', style: 'background:transparent;color:#fff;border-color:#4a6789', onclick: () => { API.call('logout', { token: this.token }); SS.del('tt'); this.token = ''; Stu.loginView('Teacher signed out.', 'info'); } }, 'Sign out')), this.body);
     ({ exams: () => this.examsTab(), bank: () => this.bankTab(), results: () => this.resultsTab(), help: () => this.helpTab() })[this.tab]();
@@ -644,7 +683,7 @@ const Teacher = {
     const [sq, sqL] = cb(e.shuffleQuestions, 'Shuffle the question order for each student');
     const [so, soL] = cb(e.shuffleOptions, 'Shuffle the answer options for each student');
     const [ss, ssL] = cb(e.showScore, 'Show the student their score right after submitting', 'Off = the student only sees “submitted”; you release results later.');
-    const [lt, ltL] = cb(e.lockTeaching, 'Close the teaching platform for candidates during the exam', 'From 15 minutes before opening until closing, candidates cannot sign in to or use the teaching platform (enforced by the server). Other students are not affected.');
+    const [lt, ltL] = cb(e.lockTeaching, BASE === 'exams' ? 'Close ALL teaching modules of this group for candidates during the exam' : 'Close the teaching platform for candidates during the exam', 'From 15 minutes before opening until closing, candidates cannot sign in to or use the teaching platform' + (BASE === 'exams' ? ' (every module of their group)' : '') + ' (enforced by the server). Other students are not affected.');
     const candAll = h('input', { type: 'radio', name: 'cand', checked: e.candidates === 'all' }), candSome = h('input', { type: 'radio', name: 'cand', checked: e.candidates !== 'all' });
     const candTxt = h('textarea', { placeholder: 'One student ID per line (or separated by commas)', style: 'min-height:110px' }); candTxt.value = e.candidates === 'all' ? '' : e.candidates.join('\n');
     const candInfo = h('div', { class: 'tiny muted' });
@@ -721,12 +760,14 @@ const Teacher = {
     const df = h('select', null, h('option', { value: '' }, 'All levels'), [1, 2, 3].map(k => h('option', { value: String(k) }, 'D' + k + ' — ' + DIFF[k])));
     let shown = [];
     const sel = new Set(); const tbody = h('tbody'); const delBtn = h('button', { class: 'btn btn-sm btn-danger', disabled: true }, 'Delete selected');
-    const src = q => q.source && q.source.kind === 'course' ? h('span', { class: 'badge' }, 'course ' + (q.source.origId || '')) : q.source && q.source.kind === 'imported' ? h('span', { class: 'badge' }, 'imported') : h('span', { class: 'badge teal', title: 'Written only for official exams — never part of Revision' }, 'exam-only');
+    const toTBtn = h('button', { class: 'btn btn-sm', disabled: true, title: 'Copy (or move) the selected questions into a teaching question bank, where students can practise them', onclick: () => this.toTeaching(this.bank.filter(q => sel.has(q.id))) }, '📤 To a teaching bank');
+    const modT = q => q.source && q.source.course && q.source.course !== BASE ? ((CONFIG.modules[q.source.course] || {}).title || q.source.course) + ' · ' : '';
+    const src = q => q.source && q.source.kind === 'course' ? h('span', { class: 'badge' }, modT(q) + 'course ' + (q.source.origId || '')) : q.source && q.source.kind === 'imported' ? h('span', { class: 'badge' }, modT(q) + 'imported') : q.source && q.source.kind === 'exambank' ? h('span', { class: 'badge' }, modT(q) + 'exam bank copy') : h('span', { class: 'badge teal', title: 'Written only for official exams — never part of Revision' }, modT(q) + 'exam-only');
     const paint = () => {
       const fv = f.value.toLowerCase(), tv = t.value, pv = tp.value, dv = df.value;
       const rows = shown = this.bank.filter(q => (!tv || q.type === tv) && (!pv || (q.topic || '(no topic)') === pv) && (!dv || String(q.difficulty) === dv) && (!fv || (q.stem + ' ' + (q.case || '') + ' ' + (q.topic || '')).toLowerCase().includes(fv)));
-      put(tbody, ...rows.map((q, i) => { const c = h('input', { type: 'checkbox', checked: sel.has(q.id), 'aria-label': 'Select', onchange: () => { if (c.checked) sel.add(q.id); else sel.delete(q.id); delBtn.disabled = !sel.size; delBtn.textContent = 'Delete selected (' + sel.size + ')'; } });
-        return h('tr', null, h('td', null, c), h('td', null, h('span', { class: 'badge' }, TYPE_LABEL[q.type])), h('td', null, diffBadge(q)), h('td', null, q.stem.slice(0, 200), q.image ? ' 🖼' : ''), h('td', { class: 'small muted' }, q.topic || ''), h('td', null, src(q)), h('td', null, h('button', { class: 'btn btn-sm', onclick: () => this.editQuestion(q) }, 'Edit'))); }));
+      put(tbody, ...rows.map((q, i) => { const c = h('input', { type: 'checkbox', checked: sel.has(q.id), 'aria-label': 'Select', onchange: () => { if (c.checked) sel.add(q.id); else sel.delete(q.id); delBtn.disabled = toTBtn.disabled = !sel.size; delBtn.textContent = 'Delete selected (' + sel.size + ')'; toTBtn.textContent = '📤 To a teaching bank (' + sel.size + ')'; } });
+        return h('tr', null, h('td', null, c), h('td', null, h('span', { class: 'badge' }, TYPE_LABEL[q.type])), h('td', null, diffBadge(q)), h('td', null, q.stem.slice(0, 200), q.image ? qThumb(q.image) : ''), h('td', { class: 'small muted' }, q.topic || ''), h('td', null, src(q)), h('td', null, h('button', { class: 'btn btn-sm', onclick: () => this.editQuestion(q) }, 'Edit'))); }));
       cntEl.textContent = rows.length + ' shown';
       if (!rows.length) tbody.append(h('tr', null, h('td', { colspan: 7, class: 'muted' }, this.bank.length ? 'No question matches.' : 'The exam bank is empty. Add questions from the course question bank, write new ones, or import them.')));
     };
@@ -741,9 +782,9 @@ const Teacher = {
     put(this.body, 
       h('div', { class: 'row', style: 'margin-bottom:6px' }, h('h1', { style: 'margin:0' }, 'Exam question bank'), h('span', { class: 'badge navy' }, this.bank.length + ' questions')),
       h('p', { class: 'muted small', style: 'margin-top:0' }, 'Private: these questions and their answers are never sent to students’ browsers except as an answer-free exam paper. ' + counts.map(x => x[1] + ' ' + TYPE_LABEL[x[0]]).join(' · ')),
-      h('div', { class: 'row', style: 'margin:10px 0 14px' }, h('button', { class: 'btn btn-primary', onclick: () => this.pickFromCourse() }, '+ Add from the course question bank'), h('button', { class: 'btn', onclick: () => this.editQuestion(null) }, '+ Write a new question'), h('button', { class: 'btn', onclick: () => this.importJson() }, 'Import (file / JSON / Claude)'), h('button', { class: 'btn', onclick: () => printAnswerKey(shown, 'Official exam bank — ' + MOD.title) }, '🖨 Print answer key (shown)')),
+      h('div', { class: 'row', style: 'margin:10px 0 14px' }, h('button', { class: 'btn btn-primary', onclick: () => this.pickFromCourse() }, BASE === 'exams' ? '+ Add from a module’s teaching question bank' : '+ Add from the course question bank'), h('button', { class: 'btn', onclick: () => this.copyFromBank() }, '⇆ Copy from another exam bank'), h('button', { class: 'btn', onclick: () => this.editQuestion(null) }, '+ Write a new question'), h('button', { class: 'btn', onclick: () => this.pictureQuestions() }, '🖼 Picture questions (practical)'), h('button', { class: 'btn', onclick: () => this.importJson() }, 'Import (file / JSON / Claude)'), h('button', { class: 'btn', onclick: () => printAnswerKey(shown, 'Official exam bank — ' + MOD.title) }, '🖨 Print answer key (shown)')),
       dist,
-      h('div', { class: 'card' }, h('div', { class: 'row', style: 'margin-bottom:10px' }, h('div', { class: 'grow', style: 'min-width:200px' }, f), h('div', { style: 'width:230px' }, tp), h('div', { style: 'width:170px' }, t), h('div', { style: 'width:160px' }, df), cntEl, delBtn),
+      h('div', { class: 'card' }, h('div', { class: 'row', style: 'margin-bottom:10px' }, h('div', { class: 'grow', style: 'min-width:200px' }, f), h('div', { style: 'width:230px' }, tp), h('div', { style: 'width:170px' }, t), h('div', { style: 'width:160px' }, df), cntEl, toTBtn, delBtn),
         h('div', { class: 'tscroll' }, h('table', { class: 't' }, h('thead', null, h('tr', null, h('th', null, ''), h('th', null, 'Type'), h('th', null, 'Level'), h('th', null, 'Question'), h('th', null, 'Topic'), h('th', null, 'Source'), h('th', null, ''))), tbody))));
     paint();
   },
@@ -758,6 +799,13 @@ const Teacher = {
     const blanks = h('textarea', { placeholder: 'One line per blank; alternatives separated by |' }); blanks.value = q.type === 'fillblank' ? (q.answers || []).map(a => a.join(' | ')).join('\n') : '';
     const pairs = h('textarea', { placeholder: 'One pair per line:  left item = matching right item', style: 'min-height:120px' }); pairs.value = (q.pairs || []).map(p => p.left + ' = ' + p.right).join('\n');
     const topic = h('input', { type: 'text', value: q.topic || '' }), image = h('input', { type: 'text', value: q.image || '', placeholder: 'https://… (optional, must be an image you may use)' });
+    const imgPrev = h('div'), showImg = () => put(imgPrev, /^https:\/\//.test(image.value.trim()) ? qThumb(image.value.trim()) : '');
+    image.addEventListener('input', showImg); showImg();
+    const upBtn = h('label', { class: 'btn btn-sm', style: 'cursor:pointer;white-space:nowrap' }, '⬆ Upload picture', h('input', { type: 'file', accept: 'image/*', class: 'sr', onchange: async ev => {
+      const fl = ev.target.files[0]; if (!fl) return; upBtn.firstChild.textContent = 'Uploading…';
+      try { const url = await this.uploadPicture(fl); image.value = url; showImg(); toast('Picture uploaded.'); } catch (e) { if (e.message !== 'auth') toast(e.message, 'bad'); }
+      upBtn.firstChild.textContent = '⬆ Upload picture'; ev.target.value = '';
+    } }));
     const expl = h('textarea', { placeholder: 'Shown only to teachers (results review)' }); expl.value = q.explanation || '';
     const fCase = h('label', { class: 'f' }, h('span', null, 'Case'), cas), fOpts = h('label', { class: 'f' }, h('span', null, 'Options — one per line; start the correct one(s) with *'), opts),
       fTf = h('label', { class: 'f' }, h('span', null, 'Correct answer'), tf), fBl = h('label', { class: 'f' }, h('span', null, 'Accepted answers — one line per blank (___ in the text)'), blanks), fPairs = h('label', { class: 'f' }, h('span', null, 'Pairs'), pairs);
@@ -783,7 +831,7 @@ const Teacher = {
     const m = modal(q0 ? 'Edit exam question' : 'New exam question', h('div', null,
       h('div', { class: 'two' }, h('label', { class: 'f' }, h('span', null, 'Type'), type), h('label', { class: 'f' }, h('span', null, 'Topic (optional)'), topic)),
       fCase, h('label', { class: 'f' }, h('span', null, 'Question text'), stem), fOpts, fTf, fBl, fPairs,
-      h('label', { class: 'f' }, h('span', null, 'Image URL'), image), h('label', { class: 'f' }, h('span', null, 'Explanation'), expl), msg,
+      h('label', { class: 'f' }, h('span', null, 'Picture (upload one, or paste an https link)'), h('div', { class: 'row', style: 'flex-wrap:nowrap' }, image, upBtn), imgPrev), h('label', { class: 'f' }, h('span', null, 'Explanation'), expl), msg,
       h('div', { class: 'row', style: 'justify-content:flex-end' }, h('button', { class: 'btn', onclick: () => m.close() }, 'Cancel'), h('button', { class: 'btn btn-primary', onclick: save }, 'Save question'))), { wide: true });
   },
   importJson() {
@@ -813,37 +861,65 @@ const Teacher = {
         modal('Import finished', h('div', null, h('p', null, h('b', null, r.saved.length + ' question(s) added.')), r.errors.length ? h('div', null, h('p', null, r.errors.length + ' not added:'), h('ul', { class: 'small' }, r.errors.map(e => h('li', null, '#' + (e.index + 1) + ' “' + e.stem + '” — ' + e.error)))) : null));
       } }, 'Add to exam bank'))), { wide: true });
   },
-  async pickFromCourse() {
-    const courseUrl = localStorage.getItem('xm_course_' + BASE) || MOD.courseUrl;
+  /** Teaching banks and exam banks this examiner may copy from/to (Portal 2.6); null with an older backend → this module only. */
+  async sources(fresh) {
+    if (this._src && !fresh) return this._src;
+    const r = await this.call('examCopySources'); this._src = r.ok ? r : null; return this._src;
+  },
+  courseOf(c) {   // the page and key of a teaching bank
+    const url = (c.moduleId === BASE && localStorage.getItem('xm_course_' + BASE)) || c.url || (CONFIG.modules[c.moduleId] || {}).courseUrl || '';
+    return { url, key: this.keys[c.moduleId] || (c.moduleId === BASE ? this.contentKey : '') };
+  },
+  srcSelect(list, cur, onPick) {
+    const s = h('select', { onchange: () => onPick(s.value) }, list.map(c => h('option', { value: c.storage, selected: c.storage === cur }, c.title + ' — ' + c.label)));
+    return s;
+  },
+  async uploadPicture(file) {
+    const dataUrl = await shrinkImage(file, 2000);
+    const r = await this.call('uploadImage', { dataUrl, filename: 'exam-' + Date.now() + '.jpg' }, { timeout: 120000 });
+    if (!r.ok || !/^https:\/\//.test(r.url || '')) throw new Error(r.error || 'The picture could not be uploaded.');
+    return r.url;
+  },
+  async pickFromCourse(pick) {
     const status = h('div', { class: 'msg info' }, 'Loading the course question bank…');
     const box = h('div', null, status);
-    const m = modal('Add from the course question bank', box, { wide: true });
+    const m = modal(BASE === 'exams' ? 'Add from a module’s teaching question bank' : 'Add from the course question bank', box, { wide: true });
+    let src = null; try { src = await this.sources(); } catch (e) { m.close(); return; }
+    const courses = src ? src.courses : [];
+    let c = null;
+    if (courses.length) {
+      c = courses.find(x => x.storage === pick) || courses.find(x => x.storage === MODULE) || (BASE !== 'exams' ? courses.find(x => x.moduleId === BASE) : null) || courses[0];
+    }
+    const course = c ? c.moduleId : BASE, cs = c ? this.courseOf(c) : { url: localStorage.getItem('xm_course_' + BASE) || MOD.courseUrl, key: this.contentKey };
+    const courseUrl = cs.url;
+    const chooser = courses.length > 1 ? h('label', { class: 'f' }, h('span', null, 'Teaching question bank'), this.srcSelect(courses, c.storage, v => { m.close(); this.pickFromCourse(v); })) : null;
+    if (chooser) box.prepend(chooser);
     let data, extra = [], excl = [];
     try {
-      if (!this.contentKey) throw new Error('No course key — sign out and sign in again.');
-      const html = await (await fetch(courseUrl, { cache: 'no-store' })).text();
-      const mm = html.match(/<script id="neo-enc" type="application\/json">([\s\S]*?)<\/script>/);
-      if (mm) {
-        const enc = JSON.parse(mm[1]), b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
-        const key = await crypto.subtle.importKey('raw', b64(this.contentKey), { name: 'AES-GCM' }, false, ['decrypt']);
-        data = JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64(enc.iv) }, key, b64(enc.ct))));
+      if (!courseUrl) throw new Error('No teaching platform link for this module');
+      data = await loadCoursePage(courseUrl, cs.key);
+      if (c) {
+        const ex = await this.call('examCourseExtras', { from: c.storage }, { timeout: 60000 });
+        if (!ex.ok) throw new Error(ex.error); extra = ex.questions || []; excl = ex.exclude || [];
       } else {
-        const pm = html.match(/<script id="neo-data" type="application\/json">([\s\S]*?)<\/script>/); if (!pm) throw new Error('No course data found at ' + courseUrl);
-        data = JSON.parse(pm[1]);
-      }
-      const all = await this.call('getAllContent', { since: 0 }, { timeout: 60000 });
-      if (all.ok) {
-        const imp = {}; all.items.forEach(it => { if (it.collection === 'importedquestions') { if (it.deleted) delete imp[it.id]; else imp[it.id] = Object.assign({}, it.data, { id: it.id }); } if (it.collection === 'revexclude' && it.id === 'exclude') excl = (it.data && it.data.ids) || []; });
-        extra = Object.values(imp);
+        const all = await this.call('getAllContent', { since: 0 }, { timeout: 60000 });
+        if (all.ok) {
+          const imp = {}; all.items.forEach(it => { if (it.collection === 'importedquestions') { if (it.deleted) delete imp[it.id]; else imp[it.id] = Object.assign({}, it.data, { id: it.id }); } if (it.collection === 'revexclude' && it.id === 'exclude') excl = (it.data && it.data.ids) || []; });
+          extra = Object.values(imp);
+        }
       }
     } catch (err) {
+      if (err.message === 'auth') return;
       status.className = 'msg bad'; status.textContent = 'Could not load the course question bank: ' + (err.message || err) + '. Check the course link below.';
-      const inp = h('input', { type: 'text', value: courseUrl });
-      box.append(h('label', { class: 'f' }, h('span', null, 'Teaching platform link'), inp), h('button', { class: 'btn', onclick: () => { localStorage.setItem('xm_course_' + BASE, inp.value.trim()); m.close(); this.pickFromCourse(); } }, 'Save link and retry'));
+      if (course === BASE) {
+        const inp = h('input', { type: 'text', value: courseUrl });
+        box.append(h('label', { class: 'f' }, h('span', null, 'Teaching platform link'), inp), h('button', { class: 'btn', onclick: () => { localStorage.setItem('xm_course_' + BASE, inp.value.trim()); m.close(); this.pickFromCourse(pick); } }, 'Save link and retry'));
+      }
       return;
     }
-    const topics = {}; (data.topics || []).forEach(t => { topics[t.id] = (t.num ? String(t.num).padStart(2, '0') + ' · ' : '') + t.title; }); // same labels as the official exam bank files
-    const inBank = new Set(this.bank.map(q => q.source && q.source.origId).filter(Boolean));
+    const topics = topicLabels(data); // same labels as the official exam bank files
+    const prefix = BASE === 'exams' ? ((CONFIG.modules[course] || {}).title || (c && c.title) || course) + ' — ' : '';
+    const inBank = new Set(this.bank.map(q => q.source && q.source.origId ? (q.source.course || BASE) + '|' + q.source.origId : '').filter(Boolean));
     const qs = data.questions.map(q => Object.assign({}, q, { _kind: 'course' })).concat(extra.map(q => Object.assign({}, q, { _kind: 'imported' })));
     const usable = qs.filter(q => TYPE_LABEL[q.type]);
     const shortN = qs.length - usable.length;
@@ -855,8 +931,8 @@ const Teacher = {
     const paint = () => {
       const tp = fTopic.value, ty = fType.value, tx = fText.value.toLowerCase();
       const rows = usable.filter(q => (!tp || q.topic === tp) && (!ty || q.type === ty) && (!tx || (q.stem + ' ' + (q.case || '')).toLowerCase().includes(tx)));
-      put(list, ...rows.map(q => { const done = inBank.has(q.id); const c = h('input', { type: 'checkbox', disabled: done, checked: sel.has(q.id), onchange: () => { if (c.checked) sel.add(q.id); else sel.delete(q.id); cnt.textContent = sel.size; } });
-        return h('label', { class: 'qitem', style: done ? 'opacity:.55' : '' }, c, h('div', null, h('span', { class: 'badge' }, TYPE_LABEL[q.type]), ' ', h('span', { class: 'tiny muted' }, (topics[q.topic] || q.topic || '') + ' · ' + q.id + (q._kind === 'imported' ? ' · imported' : '') + (done ? ' · already in exam bank' : '') + (excl.includes(q.id) ? ' · hidden from Revision' : '')), h('div', null, q.stem.slice(0, 240)))); }));
+      put(list, ...rows.map(q => { const done = inBank.has(course + '|' + q.id); const c2 = h('input', { type: 'checkbox', disabled: done, checked: sel.has(q.id), onchange: () => { if (c2.checked) sel.add(q.id); else sel.delete(q.id); cnt.textContent = sel.size; } });
+        return h('label', { class: 'qitem', style: done ? 'opacity:.55' : '' }, c2, h('div', null, h('span', { class: 'badge' }, TYPE_LABEL[q.type]), ' ', h('span', { class: 'tiny muted' }, (topics[q.topic] || q.topic || '') + ' · ' + q.id + (q._kind === 'imported' ? ' · imported' : '') + (done ? ' · already in exam bank' : '') + (excl.includes(q.id) ? ' · hidden from Revision' : '')), h('div', null, q.stem.slice(0, 240)), q.images && q.images[0] && /^https:/.test(q.images[0].url || '') ? qThumb(q.images[0].url) : null)); }));
       if (!rows.length) list.append(h('div', { class: 'qitem muted' }, 'No question matches.'));
     };
     [fTopic, fType].forEach(x => x.addEventListener('change', paint)); fText.addEventListener('input', paint);
@@ -866,26 +942,151 @@ const Teacher = {
       if (!sel.size) { toast('Select at least one question.', 'warn'); return; }
       addBtn.disabled = true; addBtn.textContent = 'Adding…';
       const picked = usable.filter(q => sel.has(q.id));
-      const out = picked.map(q => { const o = { type: q.type, stem: q.stem, topic: topics[q.topic] || q.topic || '', difficulty: q.difficulty || 0, explanation: q.explanation || '', source: { kind: q._kind, origId: q.id, course: BASE } };
+      const out = picked.map(q => { const o = { type: q.type, stem: q.stem, topic: (prefix + (topics[q.topic] || q.topic || '')).slice(0, 80), difficulty: q.difficulty || 0, explanation: q.explanation || '', source: { kind: q._kind, origId: q.id, course } };
+        const im = (q.images || []).find(x => x && /^https:\/\//.test(x.url || '')); if (im) o.image = im.url;
         ['case', 'options', 'answer', 'answers', 'pairs'].forEach(k => { if (q[k] !== undefined) o[k] = q[k]; }); return o; });
       const r = await this.call('examBankSave', { questions: out }, { timeout: 90000 });
       if (!r.ok) { toast(r.error, 'bad'); addBtn.disabled = false; addBtn.textContent = 'Add to exam bank'; return; }
       const notes = [h('li', null, r.saved.length + ' question(s) added to the private exam bank.')];
-      if (hide.checked) { const ids = Array.from(new Set(excl.concat(picked.map(q => q.id)))); const x = await this.call('upsert', { collection: 'revexclude', id: 'exclude', data: { ids } }); notes.push(h('li', null, x.ok ? 'Hidden from students’ Revision.' : 'Could not hide from Revision: ' + x.error)); }
-      if (rem.checked) { const imp = picked.filter(q => q._kind === 'imported'); for (const q of imp) await this.call('delete', { collection: 'importedquestions', id: q.id }); if (imp.length) notes.push(h('li', null, imp.length + ' imported question(s) removed from the students’ course bank — they now exist only in the private exam bank.')); }
+      const later = w => w === 'draft' ? ' (in the master draft — it reaches students when you publish the draft: Platform Home → Content)' : '';
+      if (c && (hide.checked || rem.checked)) {
+        const imp = rem.checked ? picked.filter(q => q._kind === 'imported').map(q => q.id) : [];
+        const x = await this.call('examTeachWrite', { to: c.storage, hide: hide.checked ? picked.map(q => q.id) : [], remove: imp }, { timeout: 90000 });
+        if (hide.checked) notes.push(h('li', null, x.ok ? 'Hidden from students’ Revision' + later(x.where) + '.' : 'Could not hide from Revision: ' + x.error));
+        if (imp.length && x.ok) notes.push(h('li', null, imp.length + ' imported question(s) removed from the students’ course bank' + later(x.where) + ' — they now exist only in the private exam bank.'));
+      } else if (!c) {
+        if (hide.checked) { const ids = Array.from(new Set(excl.concat(picked.map(q => q.id)))); const x = await this.call('upsert', { collection: 'revexclude', id: 'exclude', data: { ids } }); notes.push(h('li', null, x.ok ? 'Hidden from students’ Revision.' : 'Could not hide from Revision: ' + x.error)); }
+        if (rem.checked) { const imp = picked.filter(q => q._kind === 'imported'); for (const q of imp) await this.call('delete', { collection: 'importedquestions', id: q.id }); if (imp.length) notes.push(h('li', null, imp.length + ' imported question(s) removed from the students’ course bank — they now exist only in the private exam bank.')); }
+      }
       const builtIn = picked.filter(q => q._kind === 'course').length;
       if (builtIn) notes.push(h('li', null, builtIn + ' built-in question(s) are also stored inside the course file students download. They are hidden from Revision, but not secret — see the note below.'));
       m.close(); this.bankTab();
       modal('Added to the exam bank', h('div', null, h('ul', null, notes), builtIn ? h('div', { class: 'msg warn' }, 'For questions that must stay completely secret, use new exam-only questions, or ask for the course file to be rebuilt without these ' + builtIn + ' question(s).') : null, r.errors.length ? h('p', { class: 'msg bad' }, r.errors.length + ' question(s) could not be added: ' + r.errors.map(e => e.error).join('; ')) : null));
     };
-    put(box, 
-      h('p', { class: 'small muted', style: 'margin-top:0' }, usable.length + ' usable questions' + (shortN ? ' (' + shortN + ' short-answer questions are not offered: they cannot be marked reliably in an official exam)' : '') + '. Loaded from ' + courseUrl),
+    put(box, chooser,
+      h('p', { class: 'small muted', style: 'margin-top:0' }, usable.length + ' usable questions' + (shortN ? ' (' + shortN + ' short-answer questions are not offered: they cannot be marked reliably in an official exam)' : '') + '. Loaded from ' + courseUrl + (c ? ' · ' + c.label : '')),
       h('div', { class: 'row', style: 'margin-bottom:8px' }, h('div', { style: 'width:260px' }, fTopic), h('div', { style: 'width:190px' }, fType), h('div', { class: 'grow', style: 'min-width:150px' }, fText)),
       list, h('p', null, 'Selected: ', cnt),
       h('label', { class: 'chk' }, hide, h('span', null, 'Hide the selected questions from students’ Revision')),
       h('label', { class: 'chk' }, rem, h('span', null, 'Remove selected ', h('b', null, 'imported'), ' questions from the students’ course bank (they are then kept only in the private exam bank)')),
       h('div', { class: 'row', style: 'justify-content:flex-end' }, h('button', { class: 'btn', onclick: () => m.close() }, 'Cancel'), addBtn));
     paint();
+  },
+  /** Copy questions from another official exam bank (another module, group or the combined exams). */
+  async copyFromBank(pick) {
+    const box = h('div', null, h('div', { class: 'msg info' }, 'Loading…'));
+    const m = modal('Copy from another exam bank', box, { wide: true });
+    let src; try { src = await this.sources(); } catch (e) { m.close(); return; }
+    if (!src) return put(box, h('div', { class: 'msg bad' }, 'Update Portal.gs to version 2.6 first (Platform Home → SETUP), then open the exam manager again from the Teacher Dashboard.'));
+    if (!src.banks.length) return put(box, h('div', { class: 'msg warn' }, 'There is no other exam bank you can copy from.'));
+    const b = src.banks.find(x => x.storage === pick) || src.banks[0];
+    const chooser = h('label', { class: 'f' }, h('span', null, 'Copy from'), this.srcSelect(src.banks, b.storage, v => { m.close(); this.copyFromBank(v); }));
+    const r = await this.call('examCopyFrom', { from: b.storage }, { timeout: 60000 });
+    if (!r.ok) return put(box, chooser, h('div', { class: 'msg bad' }, r.error));
+    const baseOf = s => String(s).split('-')[0];
+    const have = new Set(this.bank.map(q => q.source && q.source.kind === 'exambank' ? q.source.origId : '').filter(Boolean));
+    const sel = new Set(), cnt = h('b', null, '0'), fText = h('input', { type: 'search', placeholder: 'Search…' }), list = h('div', { class: 'qlist', style: 'max-height:46vh' });
+    const paint = () => { const tx = fText.value.toLowerCase();
+      put(list, ...r.questions.filter(q => !tx || (q.stem + ' ' + (q.topic || '')).toLowerCase().includes(tx)).map(q => { const done = have.has(q.id); const c = h('input', { type: 'checkbox', disabled: done, checked: sel.has(q.id), onchange: () => { if (c.checked) sel.add(q.id); else sel.delete(q.id); cnt.textContent = sel.size; } });
+        return h('label', { class: 'qitem', style: done ? 'opacity:.55' : '' }, c, h('div', null, h('span', { class: 'badge' }, TYPE_LABEL[q.type]), ' ', h('span', { class: 'tiny muted' }, (q.topic || '') + (done ? ' · already copied' : '')), h('div', null, q.stem.slice(0, 240)), q.image ? qThumb(q.image) : null)); }));
+      if (!r.questions.length) list.append(h('div', { class: 'qitem muted' }, 'This exam bank is empty.')); };
+    fText.addEventListener('input', paint);
+    const all = h('button', { class: 'btn btn-sm', onclick: () => { r.questions.forEach(q => { if (!have.has(q.id)) sel.add(q.id); }); cnt.textContent = sel.size; paint(); } }, 'Select all');
+    const go = h('button', { class: 'btn btn-primary', onclick: async () => {
+      if (!sel.size) { toast('Select at least one question.', 'warn'); return; }
+      go.disabled = true; go.textContent = 'Copying…';
+      const fromBase = baseOf(b.storage);
+      const out = r.questions.filter(q => sel.has(q.id)).map(q => { const o = Object.assign({}, q); delete o.id; delete o.addedAt; delete o.updatedAt;
+        const course = (q.source && q.source.course) || (fromBase !== 'exams' ? fromBase : '');
+        o.topic = (BASE === 'exams' && fromBase !== 'exams' && q.topic && !/ — /.test(q.topic) ? ((CONFIG.modules[fromBase] || {}).title || fromBase) + ' — ' + q.topic : (q.topic || '')).slice(0, 80);
+        o.source = { kind: 'exambank', origId: q.id, course }; return o; });
+      let saved = 0, errs = [];
+      for (let i = 0; i < out.length; i += 60) { const x = await this.call('examBankSave', { questions: out.slice(i, i + 60) }, { timeout: 120000 }); if (!x.ok) { errs.push(x.error); break; } saved += x.saved.length; errs = errs.concat(x.errors.map(e => e.error)); }
+      m.close(); this.bankTab(); toast(saved + ' question(s) copied into this exam bank.' + (errs.length ? ' ' + errs.length + ' not copied: ' + errs[0] : ''), errs.length ? 'warn' : 'ok');
+    } }, 'Copy into this exam bank');
+    put(box, chooser, h('p', { class: 'small muted', style: 'margin-top:0' }, r.questions.length + ' question(s). The copies are independent: changing one bank later does not change the other.'), h('div', { class: 'row', style: 'margin-bottom:8px' }, h('div', { class: 'grow' }, fText), all), list,
+      h('p', null, 'Selected: ', cnt), h('div', { class: 'row', style: 'justify-content:flex-end' }, h('button', { class: 'btn', onclick: () => m.close() }, 'Cancel'), go));
+    paint();
+  },
+  /** Copy (or move) exam questions into a teaching question bank, where students practise them. */
+  async toTeaching(qs, pick) {
+    const box = h('div', null, h('div', { class: 'msg info' }, 'Loading…'));
+    const m = modal('Copy to a teaching question bank', box, { wide: true });
+    let src; try { src = await this.sources(); } catch (e) { m.close(); return; }
+    if (!src || !src.courses.length) return put(box, h('div', { class: 'msg bad' }, src ? 'There is no teaching bank you can change.' : 'Update Portal.gs to version 2.6 first, then open the exam manager again from the Teacher Dashboard.'));
+    const guess = qs.map(q => q.source && q.source.course).find(Boolean);
+    const c = src.courses.find(x => x.storage === pick) || src.courses.find(x => x.storage === MODULE) || src.courses.find(x => x.moduleId === guess && x.storage.indexOf('-') > 0 && MODULE.endsWith(x.storage.slice(x.moduleId.length))) || src.courses.find(x => x.moduleId === guess) || src.courses[0];
+    const chooser = h('label', { class: 'f' }, h('span', null, 'Copy into the teaching bank of'), this.srcSelect(src.courses, c.storage, v => { m.close(); this.toTeaching(qs, v); }));
+    let data; try { const cs = this.courseOf(c); data = await loadCoursePage(cs.url, cs.key); } catch (e) { return put(box, chooser, h('div', { class: 'msg bad' }, 'Could not open ' + c.title + ': ' + e.message)); }
+    const topics = topicLabels(data), tIds = Object.keys(topics);
+    const norm = t => String(t || '').replace(/^.* — /, '').trim().toLowerCase();
+    const rows = qs.map(q => {
+      const fromHere = q.source && q.source.course === c.moduleId && q.source.origId;
+      const orig = fromHere ? (data.questions || []).find(x => x.id === q.source.origId) : null;
+      const def = orig ? orig.topic : (tIds.find(k => norm(topics[k]) === norm(q.topic)) || '');
+      const sel = h('select', null, h('option', { value: '' }, '— choose a topic —'), tIds.map(k => h('option', { value: k, selected: k === def }, topics[k])));
+      return { q, sel, built: !!(orig && q.source.kind === 'course') };
+    });
+    const mv = h('input', { type: 'checkbox' }), msg = h('div', { class: 'msg bad' });
+    const go = h('button', { class: 'btn btn-primary', onclick: async () => {
+      if (rows.some(x => !x.sel.value)) { msg.textContent = 'Choose a topic for every question.'; return; }
+      go.disabled = true; go.textContent = 'Copying…';
+      const add = rows.map(({ q, sel }) => { const t = { type: q.type, stem: q.stem, topic: sel.value, difficulty: q.difficulty || 2, explanation: q.explanation || '', images: q.image ? [{ url: q.image, caption: '' }] : [], sourceRef: 'Official exam bank ' + q.id };
+        ['case', 'options', 'answer', 'answers', 'pairs'].forEach(k => { if (q[k] !== undefined) t[k] = q[k]; });
+        if (t.type === 'fillblank') { const n = (String(t.stem).match(/_{3,}/g) || []).length; if (n < (t.answers || []).length) t.stem = t.stem + ' ___'.repeat(t.answers.length - n); }
+        return t; });
+      const r = await this.call('examTeachWrite', { to: c.storage, add }, { timeout: 120000 });
+      if (!r.ok) { msg.textContent = r.error; go.disabled = false; go.textContent = 'Copy'; return; }
+      if (mv.checked && r.added.length === rows.length) await this.call('examBankDelete', { ids: rows.map(x => x.q.id) });
+      m.close(); this.bankTab();
+      modal('Copied to the teaching bank', h('div', null, h('p', null, h('b', null, r.added.length + ' question(s)'), ' added to the question bank of ', h('b', null, c.title), ' (' + c.label + ').' + (mv.checked && r.added.length === rows.length ? ' They were removed from this exam bank.' : '')),
+        h('p', { class: 'small' }, r.where === 'draft' ? 'They are in the master draft: students see them after you publish the draft (Platform Home → Teacher Dashboard → Platform directory → Content).' : r.where === 'local' ? 'They are local changes of this group: its students see them at their next sync.' : 'Students see them at their next sync (Revision and the question bank).'),
+        r.skipped ? h('p', { class: 'msg warn' }, r.skipped + ' question(s) were not accepted.') : null));
+    } }, 'Copy');
+    put(box, chooser, h('p', { class: 'small muted', style: 'margin-top:0' }, 'Students can practise these questions afterwards, so do not copy questions you will still use in an official exam.'),
+      h('div', { class: 'qlist', style: 'max-height:44vh' }, rows.map(({ q, sel, built }) => h('div', { class: 'qitem' }, h('div', { class: 'grow' }, h('span', { class: 'badge' }, TYPE_LABEL[q.type]), ' ', q.stem.slice(0, 200), built ? h('div', { class: 'tiny muted' }, 'This question is already built into the course (' + q.source.origId + ') — copying makes a second copy.') : null, q.image ? qThumb(q.image) : null), h('div', { style: 'width:240px' }, sel)))),
+      h('label', { class: 'chk' }, mv, h('span', null, 'Move: remove them from this exam bank afterwards')), msg,
+      h('div', { class: 'row', style: 'justify-content:flex-end' }, h('button', { class: 'btn', onclick: () => m.close() }, 'Cancel'), go));
+  },
+  /** Practical exam: several pictures at once, one question per picture (short answer or options). */
+  pictureQuestions() {
+    const rows = [], list = h('div', { class: 'piclist' }), msg = h('div', { class: 'msg bad' });
+    const topic = h('input', { type: 'text', placeholder: 'e.g. Practical — Cell injury' });
+    const addFiles = files => { Array.from(files).forEach(fl => {
+      if (!/^image\//.test(fl.type)) { toast(fl.name + ' is not a picture.', 'warn'); return; }
+      const r = { file: fl, url: '', stem: h('input', { type: 'text', value: 'What is the diagnosis?' }), mode: h('select', null, h('option', { value: 'fillblank' }, 'Short answer (typed)'), h('option', { value: 'mcq' }, 'Options (MCQ)')),
+        ans: h('textarea', { placeholder: 'Accepted answers separated by ;  e.g.  coagulative necrosis; coagulation necrosis', style: 'min-height:58px' }), state: h('span', { class: 'tiny muted' }, 'not uploaded yet') };
+      r.mode.addEventListener('change', () => { r.ans.placeholder = r.mode.value === 'mcq' ? 'One option per line — the FIRST line is the correct answer (options are shuffled for students if you choose so in the exam)' : 'Accepted answers separated by ;  e.g.  coagulative necrosis; coagulation necrosis'; });
+      const thumb = h('img', { class: 'qthumb', alt: fl.name }); thumb.src = URL.createObjectURL(fl);
+      r.el = h('div', { class: 'picrow' }, thumb, h('div', { class: 'grow' }, h('div', { class: 'tiny muted' }, fl.name, ' · ', r.state), h('label', { class: 'f' }, h('span', null, 'Question'), r.stem), h('div', { class: 'row' }, r.mode), r.ans),
+        h('button', { class: 'btn btn-sm', title: 'Remove', onclick: () => { rows.splice(rows.indexOf(r), 1); r.el.remove(); } }, '✕'));
+      rows.push(r); list.append(r.el);
+    }); };
+    const pickBtn = h('label', { class: 'btn', style: 'cursor:pointer' }, '📂 Choose pictures', h('input', { type: 'file', accept: 'image/*', multiple: true, class: 'sr', onchange: ev => { addFiles(ev.target.files); ev.target.value = ''; } }));
+    const build = r => {
+      const lines = r.mode.value === 'mcq' ? r.ans.value.split('\n').map(x => x.trim()).filter(Boolean) : r.ans.value.split(/[;\n|]/).map(x => x.trim()).filter(Boolean);
+      if (!r.stem.value.trim()) throw new Error(r.file.name + ': the question is empty.');
+      if (r.mode.value === 'mcq') { if (lines.length < 2) throw new Error(r.file.name + ': give at least two options (first line = correct).'); return { type: 'mcq', stem: r.stem.value.trim(), options: lines, answer: 0 }; }
+      if (!lines.length) throw new Error(r.file.name + ': give at least one accepted answer.');
+      return { type: 'fillblank', stem: r.stem.value.trim(), answers: [lines] };
+    };
+    const go = h('button', { class: 'btn btn-primary', onclick: async () => {
+      msg.textContent = ''; if (!rows.length) { msg.textContent = 'Choose at least one picture.'; return; }
+      let qs; try { qs = rows.map(build); } catch (e) { msg.textContent = e.message; return; }
+      go.disabled = true; let n = 0;
+      try {
+        for (const r of rows) { if (!r.url) { go.textContent = 'Uploading ' + (++n) + ' / ' + rows.length + '…'; r.state.textContent = 'uploading…'; r.url = await this.uploadPicture(r.file); r.state.textContent = 'uploaded ✓'; } }
+      } catch (e) { if (e.message !== 'auth') msg.textContent = e.message + ' — the pictures already uploaded are kept; press the button again to continue.'; go.disabled = false; go.textContent = 'Upload and add to exam bank'; return; }
+      go.textContent = 'Saving…';
+      const out = qs.map((q, i) => Object.assign(q, { image: rows[i].url, topic: topic.value.trim().slice(0, 80), difficulty: 0, explanation: '', source: { kind: 'new' } }));
+      const r = await this.call('examBankSave', { questions: out }, { timeout: 120000 });
+      if (!r.ok || (r.errors && r.errors.length)) { msg.textContent = r.error || r.errors[0].error; go.disabled = false; go.textContent = 'Upload and add to exam bank'; return; }
+      m.close(); toast(r.saved.length + ' picture question(s) added to the exam bank.'); this.bankTab();
+    } }, 'Upload and add to exam bank');
+    const m = modal('🖼 Picture questions (practical exam)', h('div', null,
+      h('p', { class: 'small', style: 'margin-top:0' }, 'Choose your own pictures (for example microscope or specimen photographs). Each picture becomes one question in this exam bank. Pictures are made smaller (longest side 2000 px) and stored in the platform’s Google Drive folder — never in the spreadsheet. Students see a picture only inside the exam, and can click it to enlarge it.'),
+      h('div', { class: 'row', style: 'margin-bottom:10px' }, pickBtn, h('label', { class: 'f grow', style: 'margin:0' }, h('span', null, 'Topic for these questions (optional)'), topic)),
+      list, msg, h('div', { class: 'row', style: 'justify-content:flex-end' }, h('button', { class: 'btn', onclick: () => m.close() }, 'Cancel'), go)), { wide: true });
   },
 
   /* ---------------- results ---------------- */
@@ -898,6 +1099,11 @@ const Teacher = {
     put(this.body, h('div', { class: 'row', style: 'margin-bottom:12px' }, h('h1', { style: 'margin:0' }, 'Results'), h('div', { class: 'grow' }, pick)), out);
     const r = await this.call('examResults', { examId: this.resExam }, { timeout: 60000 });
     if (!r.ok) return put(out, h('div', { class: 'msg bad' }, r.error));
+    // combined exams: marks per module (Portal 2.6; nothing is shown with an older backend)
+    const ms = BASE === 'exams' ? await this.call('examModuleScores', { examId: this.resExam }, { timeout: 60000 }) : null;
+    const mods = ms && ms.ok && ms.modules.length > 1 ? ms.modules : [], msBy = {};
+    if (mods.length) ms.results.forEach(x => { msBy[x.username] = x.modules; });
+    const mCell = (x, m) => { const o = (msBy[x.username] || {})[m.id]; return o ? o.marks + ' / ' + o.max + ' (' + o.percent + '%)' : ''; };
     const ex = r.exam, rows = r.results, sub = rows.filter(x => x.status === 'submitted'), pcts = sub.map(x => x.percent).sort((a, b) => a - b);
     const mean = pcts.length ? Math.round(pcts.reduce((a, b) => a + b, 0) / pcts.length * 10) / 10 : null;
     const median = pcts.length ? (pcts.length % 2 ? pcts[(pcts.length - 1) / 2] : Math.round((pcts[pcts.length / 2 - 1] + pcts[pcts.length / 2]) / 2 * 10) / 10) : null;
@@ -911,7 +1117,7 @@ const Teacher = {
       const list = rows.filter(x => (!s || x.status === s) && (!t || (x.username + ' ' + (x.name || '')).toLowerCase().includes(t)))
         .sort((a, b) => { const va = a[sortK] == null ? -1 : a[sortK], vb = b[sortK] == null ? -1 : b[sortK]; return (va > vb ? 1 : va < vb ? -1 : 0) * sortD; });
       put(tbody, ...list.map(x => h('tr', null, h('td', null, h('b', null, x.username)), h('td', null, x.name || ''), h('td', null, stLabel(x)),
-        h('td', null, x.status === 'submitted' ? x.score + ' / ' + x.total : ''), h('td', null, x.status === 'submitted' ? h('b', null, x.percent + '%') : ''),
+        h('td', null, x.status === 'submitted' ? x.score + ' / ' + x.total : ''), h('td', null, x.status === 'submitted' ? h('b', null, x.percent + '%') : ''), mods.map(m => h('td', { class: 'small' }, mCell(x, m))),
         h('td', { class: 'small' }, x.startedAt ? fmtT(x.startedAt) : ''), h('td', { class: 'small' }, x.submittedAt ? fmtT(x.submittedAt) + (x.late ? ' (late)' : '') : x.status === 'in_progress' ? (x.lastSavedAt ? 'last saved ' + fmtT(x.lastSavedAt) : 'no answers yet') : ''),
         h('td', { class: 'small' }, x.submittedAt && x.startedAt ? fmtDur(x.submittedAt - x.startedAt) : ''),
         h('td', null, x.leaves ? h('span', { class: 'badge ' + (x.leaves > 2 ? 'red' : 'amber'), title: 'Times the student left the exam window' }, x.leaves) : ''),
@@ -920,14 +1126,14 @@ const Teacher = {
         h('td', null, h('div', { class: 'row', style: 'flex-wrap:nowrap;gap:6px' }, x.status !== 'not_started' ? h('button', { class: 'btn btn-sm', onclick: () => this.attemptDetail(ex, x) }, 'View') : null,
           x.status === 'in_progress' ? h('button', { class: 'btn btn-sm', title: 'Let the student continue on another device now (e.g. the first computer failed)', onclick: async () => { if (!await confirmBox('Release the exam of ' + (x.name || x.username) + '?', 'Use this only when the student’s current device has failed. The student can then sign in on another device at once and continue with the saved answers; the old device is closed.', 'Release')) return; const rr = await this.call('examReleaseSession', { examId: ex.id, username: x.username }); toast(rr.ok ? 'Released — the student can sign in on another device now.' : rr.error, rr.ok ? 'ok' : 'bad'); this.resultsTab(); } }, 'Release') : null,
           x.status !== 'not_started' ? h('button', { class: 'btn btn-sm btn-danger', title: 'Delete this attempt so the student can sit again (technical problems only)', onclick: async () => { if (!await confirmBox('Allow ' + x.username + ' to sit again?', 'This permanently deletes the attempt of ' + (x.name || x.username) + ' (' + (x.status === 'submitted' ? x.percent + '%' : 'in progress') + '). Use only for a documented technical problem.', 'Delete attempt', true)) return; const rr = await this.call('examResetAttempt', { examId: ex.id, username: x.username }); toast(rr.ok ? 'Attempt deleted — the student can sign in and start again.' : rr.error, rr.ok ? 'ok' : 'bad'); this.resultsTab(); } }, 'Re-sit') : null)))));
-      if (!list.length) tbody.append(h('tr', null, h('td', { colspan: 11, class: 'muted' }, 'No students match.')));
+      if (!list.length) tbody.append(h('tr', null, h('td', { colspan: 11 + mods.length, class: 'muted' }, 'No students match.')));
     };
     fText.addEventListener('input', paint); fSt.addEventListener('change', paint);
     const th = (k, l) => h('th', { style: 'cursor:pointer', onclick: () => { if (sortK === k) sortD = -sortD; else { sortK = k; sortD = 1; } paint(); } }, l);
     const csv = () => {
       const esc = v => { const s = v === null || v === undefined ? '' : String(v); return /[",\n;]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
-      const head = ['Student ID', 'Name', 'Status', 'Score', 'Total', 'Percent', 'Correct', 'Incorrect', 'Unanswered', 'Started', 'Submitted', 'Duration (min)', 'Submitted automatically', 'Late', 'Left exam window (times)', 'Devices used', 'Sign-ins refused (open elsewhere)', 'Device switches', 'Released by teacher'];
-      const lines = [head].concat(rows.map(x => [x.username, x.name, x.status, x.score, x.total, x.percent, x.correct, x.incorrect, x.unanswered, x.startedAt ? new Date(x.startedAt).toLocaleString() : '', x.submittedAt ? new Date(x.submittedAt).toLocaleString() : '', x.submittedAt && x.startedAt ? Math.round((x.submittedAt - x.startedAt) / 60000) : '', x.submitMode === 'auto' ? 'yes' : '', x.late ? 'yes' : '', x.leaves || 0, x.devices || 0, x.blocked || 0, x.takeovers || 0, x.releases || 0]));
+      const head = ['Student ID', 'Name', 'Status', 'Score', 'Total', 'Percent', 'Correct', 'Incorrect', 'Unanswered', 'Started', 'Submitted', 'Duration (min)', 'Submitted automatically', 'Late', 'Left exam window (times)', 'Devices used', 'Sign-ins refused (open elsewhere)', 'Device switches', 'Released by teacher'].concat(...mods.map(m => [m.title + ' marks', m.title + ' max', m.title + ' %']));
+      const lines = [head].concat(rows.map(x => [x.username, x.name, x.status, x.score, x.total, x.percent, x.correct, x.incorrect, x.unanswered, x.startedAt ? new Date(x.startedAt).toLocaleString() : '', x.submittedAt ? new Date(x.submittedAt).toLocaleString() : '', x.submittedAt && x.startedAt ? Math.round((x.submittedAt - x.startedAt) / 60000) : '', x.submitMode === 'auto' ? 'yes' : '', x.late ? 'yes' : '', x.leaves || 0, x.devices || 0, x.blocked || 0, x.takeovers || 0, x.releases || 0].concat(...mods.map(m => { const o = (msBy[x.username] || {})[m.id]; return o ? [o.marks, o.max, o.percent] : ['', '', '']; }))));
       const blob = new Blob(['﻿' + lines.map(l => l.map(esc).join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
       const a = h('a', { href: URL.createObjectURL(blob), download: (ex.title.replace(/[^\w-]+/g, '_') || 'exam') + '_results.csv' }); document.body.append(a); a.click(); a.remove();
     };
@@ -938,7 +1144,12 @@ const Teacher = {
         kpi(mean === null ? null : mean + '%', 'average'), kpi(median === null ? null : median + '%', 'median'), kpi(pcts.length ? pcts[pcts.length - 1] + '%' : null, 'highest'), kpi(pcts.length ? pcts[0] + '%' : null, 'lowest')),
       h('div', { class: 'card', style: 'margin-bottom:14px' },
         h('div', { class: 'row', style: 'margin-bottom:10px' }, h('div', { class: 'grow', style: 'min-width:180px' }, fText), h('div', { style: 'width:170px' }, fSt), h('button', { class: 'btn btn-sm', onclick: () => this.resultsTab() }, '↻ Refresh'), h('button', { class: 'btn btn-sm btn-primary', onclick: csv }, '⬇ Excel (CSV)')),
-        h('div', { class: 'tscroll' }, h('table', { class: 't' }, h('thead', null, h('tr', null, th('username', 'ID'), th('name', 'Name'), th('status', 'Status'), th('score', 'Score'), th('percent', '%'), th('startedAt', 'Started'), th('submittedAt', 'Submitted'), h('th', null, 'Time used'), th('leaves', 'Left window'), th('devices', 'Devices'), h('th', null, ''))), tbody))),
+        h('div', { class: 'tscroll' }, h('table', { class: 't' }, h('thead', null, h('tr', null, th('username', 'ID'), th('name', 'Name'), th('status', 'Status'), th('score', 'Score'), th('percent', '%'), mods.map(m => h('th', null, m.title)), th('startedAt', 'Started'), th('submittedAt', 'Submitted'), h('th', null, 'Time used'), th('leaves', 'Left window'), th('devices', 'Devices'), h('th', null, ''))), tbody))),
+      mods.length ? h('div', { class: 'card', style: 'margin-bottom:14px' }, h('h2', null, 'Results per module'),
+        h('div', { class: 'tscroll' }, h('table', { class: 't' }, h('thead', null, h('tr', null, h('th', null, 'Module'), h('th', null, 'Questions per paper'), h('th', null, 'Average'), h('th', null, 'Lowest'), h('th', null, 'Highest'))),
+          h('tbody', null, mods.map(m => { const v = ms.results.map(x => x.modules[m.id]).filter(Boolean), pc = v.map(o => o.percent);
+            return h('tr', null, h('td', null, h('b', null, m.title)), h('td', null, v.length ? Math.round(v.reduce((a, o) => a + o.max, 0) / v.length * 10) / 10 : '—'), h('td', null, pc.length ? Math.round(pc.reduce((a, b) => a + b, 0) / pc.length * 10) / 10 + '%' : '—'), h('td', null, pc.length ? Math.min(...pc) + '%' : '—'), h('td', null, pc.length ? Math.max(...pc) + '%' : '—')); })))),
+        h('p', { class: 'tiny muted' }, 'Each question counts in the module it was copied from.')) : null,
       h('div', { class: 'card' }, h('h2', null, 'Question analysis'), h('p', { class: 'small muted', style: 'margin-top:0' }, 'Share of submitted papers that answered each question fully correctly — hardest first.'),
         items.length ? h('div', { class: 'tscroll' }, h('table', { class: 't' }, h('thead', null, h('tr', null, h('th', null, 'Question'), h('th', null, 'Type'), h('th', null, 'Answered by'), h('th', null, 'Fully correct'), h('th', null, 'Blank'))),
           h('tbody', null, items.map(it => h('tr', null, h('td', null, it.stem), h('td', null, h('span', { class: 'badge' }, TYPE_LABEL[it.type])), h('td', null, it.n), h('td', null, h('b', { style: 'color:' + (it.pct < 40 ? 'var(--red)' : it.pct < 70 ? 'var(--amber)' : 'var(--green)') }, it.pct + '%')), h('td', null, it.unanswered)))))) : h('p', { class: 'muted' }, 'Available once papers are submitted.')));
@@ -964,7 +1175,7 @@ const Teacher = {
       if (q.type === 'matching') p.left.forEach((l, li) => { const correctJ = ord.right.indexOf(ord.left[li]); const got = resp ? resp[li] : undefined;
         body.push(h('div', { class: 'o' + (got === correctJ ? ' c' : got !== undefined ? ' w' : '') }, l + ' → ' + (got !== undefined ? p.right[got] : '—'), got !== correctJ ? '  (correct: ' + p.right[correctJ] + ')' : '')); });
       return h('div', { class: 'dq' }, h('div', { class: 'row' }, h('b', null, 'Q' + (i + 1)), h('span', { class: 'badge' }, TYPE_LABEL[q.type]), h('span', { class: 'right' }, mark)),
-        q.case ? h('div', { class: 'case', style: 'margin-top:8px' }, q.case) : null, h('p', { style: 'font-weight:600' }, q.stem), body, q.explanation ? h('p', { class: 'small muted' }, 'Explanation: ' + q.explanation) : null);
+        q.case ? h('div', { class: 'case', style: 'margin-top:8px' }, q.case) : null, q.image ? qThumb(q.image) : null, h('p', { style: 'font-weight:600' }, q.stem), body, q.explanation ? h('p', { class: 'small muted' }, 'Explanation: ' + q.explanation) : null);
     });
     modal((x.name || x.username) + ' — ' + (a.status === 'submitted' ? a.score + ' / ' + a.total + ' (' + a.percent + '%)' : 'in progress'), h('div', null,
       h('p', { class: 'small muted' }, 'ID ' + x.username + ' · started ' + fmtDT(a.startedAt) + (a.submittedAt ? ' · submitted ' + fmtT(a.submittedAt) + (a.submitMode === 'auto' ? ' (automatically)' : '') : '') + ' · left the exam window ' + (a.leaves || 0) + ' time(s) · ' + (a.devices || 0) + ' device(s), ' + (a.blocked || 0) + ' refused sign-in(s) · ' + (a.saveCount || 0) + ' saves'), blocks,
@@ -989,9 +1200,43 @@ const Teacher = {
   }
 };
 
+/* ==========================================================================
+   FRONT PAGE — the exams of a group (?g=<link code>) or of every module (no ?m=)
+   Public information only (titles, times, state); the exam itself needs the access code.
+   ========================================================================== */
+const Front = {
+  async show() {
+    const box = h('div', { class: 'front-list' }, h('p', { class: 'muted' }, 'Loading the exams…'));
+    const head = h('div', { class: 'front-head' }, brand(GROUP ? 'Official exams · ' + CONFIG.department : CONFIG.department), h('h1', null, 'Official exams'), h('p', { class: 'muted', id: 'front-sub' }, ''));
+    mount(h('div', { class: 'front' }, head, box,
+      h('p', { class: 'small muted', style: 'margin-top:18px' }, 'Choose your exam to sign in. You need the ', h('b', null, 'exam access code'), ' (announced in the exam room), your student ID and your password.'),
+      h('p', { class: 'small', style: 'margin-top:6px' }, h('a', { href: CONFIG.platformHome + (GROUP ? '?g=' + encodeURIComponent(GROUP) : '') }, '← Platform Home'), ' · ', h('a', { href: location.pathname + '#teacher', onclick: () => { location.hash = 'teacher'; location.reload(); } }, 'Teacher sign-in'))));
+    const paint = async () => {
+      const r = await API.call('portalExamList', Object.assign({ module: 'portal' }, GROUP ? { g: GROUP } : {}));
+      if (!r.ok) { put(box, h('div', { class: 'msg bad' }, r.code === 'nogroup' ? 'This exam page link is not valid. Please check the link from your teacher.' : r.code === 'badaction' ? 'The exam list is not available yet (the server needs updating).' : (r.error || 'Could not load the exams.'))); return; }
+      if (r.group) { $('#front-sub').textContent = (r.institution.name || '') + ' · ' + r.group.name + (r.group.academicYear ? ' · ' + r.group.academicYear : ''); document.title = 'Official exams — ' + r.group.name; }
+      else $('#front-sub').textContent = 'All modules';
+      const off = (r.serverTime || Date.now()) - Date.now();
+      if (!r.exams.length) { put(box, h('div', { class: 'card' }, h('p', { style: 'margin:0' }, 'No exam is scheduled at the moment.'))); return; }
+      put(box, r.exams.map(x => {
+        const now = Date.now() + off;
+        const pill = x.state === 'open' ? h('span', { class: 'badge green' }, '● Open now') : x.state === 'notyet' ? h('span', { class: 'badge amber' }, 'Opens ' + fmtDT(x.opensAt)) : h('span', { class: 'badge' }, 'Closed');
+        const href = location.pathname + '?m=' + encodeURIComponent(x.storage) + (GROUP ? '&g=' + encodeURIComponent(GROUP) : '');
+        return h('div', { class: 'card front-ex' + (x.state === 'closed' ? ' off' : ''), 'data-storage': x.storage },
+          h('div', { class: 'row' }, h('div', null, h('div', { class: 'small muted' }, (x.kind === 'combined' ? '🧩 ' : '📘 ') + x.moduleTitle), h('h2', { style: 'margin:2px 0 4px' }, x.title)), h('span', { class: 'right' }, pill)),
+          h('div', { class: 'small muted' }, 'Window: ' + fmtDT(x.opensAt) + ' – ' + fmtT(x.closesAt) + ' · time allowed ' + fmtDur(x.durationMin * 60000) + ' · ' + x.questions + ' question' + (x.questions === 1 ? '' : 's') + (x.state === 'notyet' && x.opensAt - now < 3600000 ? ' · starts in ' + fmtDur(x.opensAt - now) : '')),
+          x.state === 'closed' ? null : h('div', { style: 'margin-top:10px' }, h('a', { class: 'btn btn-primary', href }, x.state === 'open' ? 'Go to the exam sign-in →' : 'Exam sign-in page →')));
+      }));
+    };
+    await paint(); this.timer = setInterval(paint, 60000);
+  }
+};
+
 /* ---------- boot ---------- */
 (function boot() {
-  if (location.hash === '#teacher' || SS.get('tt', null)) Teacher.resumeOrLogin(); else Stu.start();
+  if (location.hash === '#teacher' || SS.get('tt', null)) Teacher.resumeOrLogin();
+  else if (!QS.get('m') && !SS.get('sess', null)) Front.show();   // no module chosen: the list of exams
+  else Stu.start();
 })();
 </script>
 </body>
