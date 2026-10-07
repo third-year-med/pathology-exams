@@ -543,6 +543,8 @@ const Stu = {
 
 const DIFF = { 1: 'Recall', 2: 'Understanding', 3: 'Integration' };
 const byTopic = (a, b) => String(a).localeCompare(String(b), undefined, { numeric: true });
+function typeOk(q, t) { return !t || (t === '_pic' ? !!q.image : q.type === t); }   // '_pic' = picture questions (practical)
+function typeSelect() { return h('select', null, h('option', { value: '' }, 'All types'), h('option', { value: '_pic' }, '🖼 Picture questions'), Object.keys(TYPE_LABEL).map(k => h('option', { value: k }, TYPE_LABEL[k]))); }
 function topicsOf(bank) { const seen = []; bank.forEach(q => { const t = q.topic || '(no topic)'; if (!seen.includes(t)) seen.push(t); }); return seen.sort(byTopic); }
 function diffBadge(q) { return q.difficulty ? h('span', { class: 'badge' + (q.difficulty === 3 ? ' amber' : q.difficulty === 1 ? ' green' : ''), title: 'Difficulty ' + q.difficulty + ' — ' + DIFF[q.difficulty] }, 'D' + q.difficulty) : ''; }
 /** Teacher-only printable answer key of the given exam-bank questions. */
@@ -693,7 +695,7 @@ const Teacher = {
     // question picker
     const sel = new Set(e.questionIds.filter(id => this.bank.some(q => q.id === id)));
     const qFilter = h('input', { type: 'search', placeholder: 'Filter questions…' });
-    const qType = h('select', null, h('option', { value: '' }, 'All types'), Object.keys(TYPE_LABEL).map(k => h('option', { value: k }, TYPE_LABEL[k])));
+    const qType = typeSelect();
     const TOPS = topicsOf(this.bank);
     const qTopic = h('select', null, h('option', { value: '' }, 'All topics'), TOPS.map(x => h('option', { value: x }, x)));
     const qDiff = h('select', null, h('option', { value: '' }, 'All levels'), [1, 2, 3].map(k => h('option', { value: String(k) }, 'D' + k + ' — ' + DIFF[k])));
@@ -701,15 +703,15 @@ const Teacher = {
     const qList = h('div', { class: 'qlist' }), qCount = h('b');
     const paintList = () => {
       const f = qFilter.value.toLowerCase(), t = qType.value, tpv = qTopic.value, dv = qDiff.value;
-      const rows = this.bank.filter(q => (!t || q.type === t) && (!tpv || (q.topic || '(no topic)') === tpv) && (!dv || String(q.difficulty) === dv) && (!f || (q.stem + ' ' + (q.topic || '')).toLowerCase().includes(f)));
+      const rows = this.bank.filter(q => typeOk(q, t) && (!tpv || (q.topic || '(no topic)') === tpv) && (!dv || String(q.difficulty) === dv) && (!f || (q.stem + ' ' + (q.topic || '')).toLowerCase().includes(f)));
       put(qList, ...(rows.length ? rows.map(q => { const c = h('input', { type: 'checkbox', checked: sel.has(q.id), onchange: () => { if (c.checked) sel.add(q.id); else sel.delete(q.id); qCount.textContent = sel.size; } });
-        return h('label', { class: 'qitem' }, c, h('div', null, h('span', { class: 'badge' }, TYPE_LABEL[q.type]), ' ', diffBadge(q), ' ', q.topic ? h('span', { class: 'tiny muted' }, q.topic + ' · ') : null, q.stem.slice(0, 220))); }) : [h('div', { class: 'qitem muted' }, this.bank.length ? 'No question matches.' : 'The exam bank is empty — add questions in the “Exam question bank” tab first.')]));
+        return h('label', { class: 'qitem' }, c, h('div', null, h('span', { class: 'badge' }, TYPE_LABEL[q.type]), ' ', diffBadge(q), ' ', q.topic ? h('span', { class: 'tiny muted' }, q.topic + ' · ') : null, q.stem.slice(0, 220))); }) : [h('div', { class: 'qitem muted' }, this.bank.length ? 'No question matches.' : 'This place’s exam bank is still empty, so there are no topics yet. Open the “Exam question bank” tab and fill it first (⇆ Copy from another exam bank, + Add from the course question bank, or 🖼 Picture questions).')]));
       qCount.textContent = sel.size;
     };
     qFilter.addEventListener('input', paintList); [qType, qTopic, qDiff].forEach(x => x.addEventListener('change', paintList)); paintList();
     const quickPick = () => { // N random questions from EVERY topic (respecting the type/level filters) — a balanced paper
       const n = Math.max(1, Number(perTopic.value) || 1), t = qType.value, dv = qDiff.value; sel.clear();
-      TOPS.forEach(tp => { const pool = this.bank.filter(q => (q.topic || '(no topic)') === tp && (!t || q.type === t) && (!dv || String(q.difficulty) === dv)).map(q => q.id);
+      TOPS.forEach(tp => { const pool = this.bank.filter(q => (q.topic || '(no topic)') === tp && typeOk(q, t) && (!dv || String(q.difficulty) === dv)).map(q => q.id);
         for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
         pool.slice(0, n).forEach(id => sel.add(id)); });
       paintList(); toast(sel.size + ' questions selected (' + n + ' per topic).');
@@ -754,7 +756,7 @@ const Teacher = {
   /* ---------------- exam question bank ---------------- */
   async bankTab() {
     this.loading(); const r = await this.loadBank(); if (!r.ok) return put(this.body, h('div', { class: 'msg bad' }, r.error));
-    const f = h('input', { type: 'search', placeholder: 'Search the exam bank…' }), t = h('select', null, h('option', { value: '' }, 'All types'), Object.keys(TYPE_LABEL).map(k => h('option', { value: k }, TYPE_LABEL[k])));
+    const f = h('input', { type: 'search', placeholder: 'Search the exam bank…' }), t = typeSelect();
     const TOP = topicsOf(this.bank);
     const tp = h('select', null, h('option', { value: '' }, 'All topics'), TOP.map(x => h('option', { value: x }, x)));
     const df = h('select', null, h('option', { value: '' }, 'All levels'), [1, 2, 3].map(k => h('option', { value: String(k) }, 'D' + k + ' — ' + DIFF[k])));
@@ -765,11 +767,11 @@ const Teacher = {
     const src = q => q.source && q.source.kind === 'course' ? h('span', { class: 'badge' }, modT(q) + 'course ' + (q.source.origId || '')) : q.source && q.source.kind === 'imported' ? h('span', { class: 'badge' }, modT(q) + 'imported') : q.source && q.source.kind === 'exambank' ? h('span', { class: 'badge' }, modT(q) + 'exam bank copy') : h('span', { class: 'badge teal', title: 'Written only for official exams — never part of Revision' }, modT(q) + 'exam-only');
     const paint = () => {
       const fv = f.value.toLowerCase(), tv = t.value, pv = tp.value, dv = df.value;
-      const rows = shown = this.bank.filter(q => (!tv || q.type === tv) && (!pv || (q.topic || '(no topic)') === pv) && (!dv || String(q.difficulty) === dv) && (!fv || (q.stem + ' ' + (q.case || '') + ' ' + (q.topic || '')).toLowerCase().includes(fv)));
+      const rows = shown = this.bank.filter(q => typeOk(q, tv) && (!pv || (q.topic || '(no topic)') === pv) && (!dv || String(q.difficulty) === dv) && (!fv || (q.stem + ' ' + (q.case || '') + ' ' + (q.topic || '')).toLowerCase().includes(fv)));
       put(tbody, ...rows.map((q, i) => { const c = h('input', { type: 'checkbox', checked: sel.has(q.id), 'aria-label': 'Select', onchange: () => { if (c.checked) sel.add(q.id); else sel.delete(q.id); delBtn.disabled = toTBtn.disabled = !sel.size; delBtn.textContent = 'Delete selected (' + sel.size + ')'; toTBtn.textContent = '📤 To a teaching bank (' + sel.size + ')'; } });
         return h('tr', null, h('td', null, c), h('td', null, h('span', { class: 'badge' }, TYPE_LABEL[q.type])), h('td', null, diffBadge(q)), h('td', null, q.stem.slice(0, 200), q.image ? qThumb(q.image) : ''), h('td', { class: 'small muted' }, q.topic || ''), h('td', null, src(q)), h('td', null, h('button', { class: 'btn btn-sm', onclick: () => this.editQuestion(q) }, 'Edit'))); }));
       cntEl.textContent = rows.length + ' shown';
-      if (!rows.length) tbody.append(h('tr', null, h('td', { colspan: 7, class: 'muted' }, this.bank.length ? 'No question matches.' : 'The exam bank is empty. Add questions from the course question bank, write new ones, or import them.')));
+      if (!rows.length) tbody.append(h('tr', null, h('td', { colspan: 7, class: 'muted' }, this.bank.length ? 'No question matches.' : 'This exam bank is empty. Fill it with ⇆ Copy from another exam bank (for example the normal link’s bank, topic by topic), + Add from the course question bank, 🖼 Picture questions, or write / import questions.')));
     };
     const cntEl = h('span', { class: 'small muted' });
     f.addEventListener('input', paint); [t, tp, df].forEach(x => x.addEventListener('change', paint));
@@ -924,13 +926,14 @@ const Teacher = {
     const usable = qs.filter(q => TYPE_LABEL[q.type]);
     const shortN = qs.length - usable.length;
     const sel = new Set();
-    const fTopic = h('select', null, h('option', { value: '' }, 'All topics'), Object.keys(topics).map(k => h('option', { value: k }, topics[k])));
+    const fTopic = h('select', null, h('option', { value: '' }, 'All topics'), Object.keys(topics).map(k => h('option', { value: k }, topics[k] + ' (' + usable.filter(q => q.topic === k).length + ')')));
     const fType = h('select', null, h('option', { value: '' }, 'All types'), Object.keys(TYPE_LABEL).map(k => h('option', { value: k }, TYPE_LABEL[k])));
     const fText = h('input', { type: 'search', placeholder: 'Search…' });
     const list = h('div', { class: 'qlist', style: 'max-height:46vh' }), cnt = h('b', null, '0');
+    let shownC = [];
     const paint = () => {
       const tp = fTopic.value, ty = fType.value, tx = fText.value.toLowerCase();
-      const rows = usable.filter(q => (!tp || q.topic === tp) && (!ty || q.type === ty) && (!tx || (q.stem + ' ' + (q.case || '')).toLowerCase().includes(tx)));
+      const rows = shownC = usable.filter(q => (!tp || q.topic === tp) && (!ty || q.type === ty) && (!tx || (q.stem + ' ' + (q.case || '')).toLowerCase().includes(tx)));
       put(list, ...rows.map(q => { const done = inBank.has(course + '|' + q.id); const c2 = h('input', { type: 'checkbox', disabled: done, checked: sel.has(q.id), onchange: () => { if (c2.checked) sel.add(q.id); else sel.delete(q.id); cnt.textContent = sel.size; } });
         return h('label', { class: 'qitem', style: done ? 'opacity:.55' : '' }, c2, h('div', null, h('span', { class: 'badge' }, TYPE_LABEL[q.type]), ' ', h('span', { class: 'tiny muted' }, (topics[q.topic] || q.topic || '') + ' · ' + q.id + (q._kind === 'imported' ? ' · imported' : '') + (done ? ' · already in exam bank' : '') + (excl.includes(q.id) ? ' · hidden from Revision' : '')), h('div', null, q.stem.slice(0, 240)), q.images && q.images[0] && /^https:/.test(q.images[0].url || '') ? qThumb(q.images[0].url) : null)); }));
       if (!rows.length) list.append(h('div', { class: 'qitem muted' }, 'No question matches.'));
@@ -965,7 +968,9 @@ const Teacher = {
     };
     put(box, chooser,
       h('p', { class: 'small muted', style: 'margin-top:0' }, usable.length + ' usable questions' + (shortN ? ' (' + shortN + ' short-answer questions are not offered: they cannot be marked reliably in an official exam)' : '') + '. Loaded from ' + courseUrl + (c ? ' · ' + c.label : '')),
-      h('div', { class: 'row', style: 'margin-bottom:8px' }, h('div', { style: 'width:260px' }, fTopic), h('div', { style: 'width:190px' }, fType), h('div', { class: 'grow', style: 'min-width:150px' }, fText)),
+      h('div', { class: 'row', style: 'margin-bottom:8px' }, h('div', { style: 'width:260px' }, fTopic), h('div', { style: 'width:190px' }, fType), h('div', { class: 'grow', style: 'min-width:150px' }, fText),
+        h('button', { class: 'btn btn-sm', onclick: () => { shownC.forEach(q => { if (!inBank.has(course + '|' + q.id)) sel.add(q.id); }); cnt.textContent = sel.size; paint(); } }, 'Select all shown'),
+        h('button', { class: 'btn btn-sm', onclick: () => { sel.clear(); cnt.textContent = 0; paint(); } }, 'Clear')),
       list, h('p', null, 'Selected: ', cnt),
       h('label', { class: 'chk' }, hide, h('span', null, 'Hide the selected questions from students’ Revision')),
       h('label', { class: 'chk' }, rem, h('span', null, 'Remove selected ', h('b', null, 'imported'), ' questions from the students’ course bank (they are then kept only in the private exam bank)')),
@@ -979,19 +984,23 @@ const Teacher = {
     let src; try { src = await this.sources(); } catch (e) { m.close(); return; }
     if (!src) return put(box, h('div', { class: 'msg bad' }, 'Update Portal.gs to version 2.6 first (Platform Home → SETUP), then open the exam manager again from the Teacher Dashboard.'));
     if (!src.banks.length) return put(box, h('div', { class: 'msg warn' }, 'There is no other exam bank you can copy from.'));
-    const b = src.banks.find(x => x.storage === pick) || src.banks[0];
+    const b = src.banks.find(x => x.storage === pick) || src.banks.find(x => x.storage === BASE) || src.banks[0];
     const chooser = h('label', { class: 'f' }, h('span', null, 'Copy from'), this.srcSelect(src.banks, b.storage, v => { m.close(); this.copyFromBank(v); }));
     const r = await this.call('examCopyFrom', { from: b.storage }, { timeout: 60000 });
     if (!r.ok) return put(box, chooser, h('div', { class: 'msg bad' }, r.error));
     const baseOf = s => String(s).split('-')[0];
     const have = new Set(this.bank.map(q => q.source && q.source.kind === 'exambank' ? q.source.origId : '').filter(Boolean));
     const sel = new Set(), cnt = h('b', null, '0'), fText = h('input', { type: 'search', placeholder: 'Search…' }), list = h('div', { class: 'qlist', style: 'max-height:46vh' });
-    const paint = () => { const tx = fText.value.toLowerCase();
-      put(list, ...r.questions.filter(q => !tx || (q.stem + ' ' + (q.topic || '')).toLowerCase().includes(tx)).map(q => { const done = have.has(q.id); const c = h('input', { type: 'checkbox', disabled: done, checked: sel.has(q.id), onchange: () => { if (c.checked) sel.add(q.id); else sel.delete(q.id); cnt.textContent = sel.size; } });
+    const TOPS = topicsOf(r.questions), fTopic = h('select', null, h('option', { value: '' }, 'All topics'), TOPS.map(x => h('option', { value: x }, x + ' (' + r.questions.filter(q => (q.topic || '(no topic)') === x).length + ')'))), fType = typeSelect();
+    let shown = [];
+    const paint = () => { const tx = fText.value.toLowerCase(), tp = fTopic.value, ty = fType.value;
+      shown = r.questions.filter(q => (!tp || (q.topic || '(no topic)') === tp) && typeOk(q, ty) && (!tx || (q.stem + ' ' + (q.topic || '')).toLowerCase().includes(tx)));
+      put(list, ...shown.map(q => { const done = have.has(q.id); const c = h('input', { type: 'checkbox', disabled: done, checked: sel.has(q.id), onchange: () => { if (c.checked) sel.add(q.id); else sel.delete(q.id); cnt.textContent = sel.size; } });
         return h('label', { class: 'qitem', style: done ? 'opacity:.55' : '' }, c, h('div', null, h('span', { class: 'badge' }, TYPE_LABEL[q.type]), ' ', h('span', { class: 'tiny muted' }, (q.topic || '') + (done ? ' · already copied' : '')), h('div', null, q.stem.slice(0, 240)), q.image ? qThumb(q.image) : null)); }));
-      if (!r.questions.length) list.append(h('div', { class: 'qitem muted' }, 'This exam bank is empty.')); };
-    fText.addEventListener('input', paint);
-    const all = h('button', { class: 'btn btn-sm', onclick: () => { r.questions.forEach(q => { if (!have.has(q.id)) sel.add(q.id); }); cnt.textContent = sel.size; paint(); } }, 'Select all');
+      if (!shown.length) list.append(h('div', { class: 'qitem muted' }, r.questions.length ? 'No question matches.' : 'This exam bank is empty.')); };
+    fText.addEventListener('input', paint); [fTopic, fType].forEach(x => x.addEventListener('change', paint));
+    const all = h('button', { class: 'btn btn-sm', onclick: () => { shown.forEach(q => { if (!have.has(q.id)) sel.add(q.id); }); cnt.textContent = sel.size; paint(); } }, 'Select all shown');
+    const none = h('button', { class: 'btn btn-sm', onclick: () => { sel.clear(); cnt.textContent = 0; paint(); } }, 'Clear');
     const go = h('button', { class: 'btn btn-primary', onclick: async () => {
       if (!sel.size) { toast('Select at least one question.', 'warn'); return; }
       go.disabled = true; go.textContent = 'Copying…';
@@ -1004,7 +1013,7 @@ const Teacher = {
       for (let i = 0; i < out.length; i += 60) { const x = await this.call('examBankSave', { questions: out.slice(i, i + 60) }, { timeout: 120000 }); if (!x.ok) { errs.push(x.error); break; } saved += x.saved.length; errs = errs.concat(x.errors.map(e => e.error)); }
       m.close(); this.bankTab(); toast(saved + ' question(s) copied into this exam bank.' + (errs.length ? ' ' + errs.length + ' not copied: ' + errs[0] : ''), errs.length ? 'warn' : 'ok');
     } }, 'Copy into this exam bank');
-    put(box, chooser, h('p', { class: 'small muted', style: 'margin-top:0' }, r.questions.length + ' question(s). The copies are independent: changing one bank later does not change the other.'), h('div', { class: 'row', style: 'margin-bottom:8px' }, h('div', { class: 'grow' }, fText), all), list,
+    put(box, chooser, h('p', { class: 'small muted', style: 'margin-top:0' }, r.questions.length + ' question(s). The copies are independent: changing one bank later does not change the other.'), h('div', { class: 'row', style: 'margin-bottom:8px' }, h('div', { style: 'width:260px' }, fTopic), h('div', { style: 'width:190px' }, fType), h('div', { class: 'grow', style: 'min-width:150px' }, fText), all, none), list,
       h('p', null, 'Selected: ', cnt), h('div', { class: 'row', style: 'justify-content:flex-end' }, h('button', { class: 'btn', onclick: () => m.close() }, 'Cancel'), go));
     paint();
   },
