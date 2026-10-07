@@ -656,7 +656,32 @@ const Teacher = {
         h('div', { class: 'row' }, h('button', { class: 'btn btn-sm', onclick: () => this.editExam(e) }, 'Edit'),
           h('button', { class: 'btn btn-sm', onclick: () => { this.tab = 'results'; this.resExam = e.id; this.shell(); } }, 'Results'),
           e.status === 'published' && e.state !== 'closed' ? h('button', { class: 'btn btn-sm btn-danger', onclick: async () => { if (!await confirmBox('Close this exam now?', 'No new student can start. Students already writing are auto-submitted when their own timer ends.', 'Close exam', true)) return; await this.saveExam(Object.assign({}, e, { status: 'closed' })); this.examsTab(); } }, 'Close now') : null,
+          h('button', { class: 'btn btn-sm', title: 'Give this exam to a group (e.g. Razi Group A): the exam and its questions are copied into that group’s exam place', onclick: () => this.copyExam(e) }, '⧉ Copy to a group'),
           h('button', { class: 'btn btn-sm btn-danger', onclick: () => this.deleteExam(e) }, 'Delete')))));
+  },
+  /** Copy this exam (and its questions) to another exam place — usually a group of this module. */
+  async copyExam(e) {
+    const box = h('div', null, h('div', { class: 'msg info' }, 'Loading…'));
+    const m = modal('Copy “' + e.title + '” to a group', box, { wide: true });
+    let src; try { src = await this.sources(true); } catch (x) { m.close(); return; }
+    if (!src) return put(box, h('div', { class: 'msg bad' }, 'Update Portal.gs to version 2.6 first.'));
+    const list = src.banks.slice().sort((a, b) => (b.moduleId === BASE) - (a.moduleId === BASE));
+    if (!list.length) return put(box, h('div', { class: 'msg warn' }, 'There is no other exam place you can use.'));
+    const pick = h('select', null, list.map(b => h('option', { value: b.storage }, b.title + ' — ' + b.label)));
+    const pub = h('input', { type: 'checkbox', checked: e.status === 'published' }), msg = h('div', { class: 'msg bad' });
+    const go = h('button', { class: 'btn btn-primary', onclick: async () => {
+      go.disabled = true; go.textContent = 'Copying…';
+      const r = await this.call('examCopyExam', { examId: e.id, to: pick.value, publish: pub.checked }, { timeout: 120000 });
+      if (!r.ok) { msg.textContent = r.error; go.disabled = false; go.textContent = 'Copy exam'; return; }
+      put(box, h('div', { class: 'msg ok' }, '“' + e.title + '” was copied to ', h('b', null, r.label), ' — ' + (r.status === 'published' ? 'published with the same times and access code.' : 'as a DRAFT (check the times and code there, then press Publish).')),
+        h('p', { class: 'small' }, r.copied + ' question(s) copied' + (r.reused ? ', ' + r.reused + ' already there (reused)' : '') + '. The group’s students sign in to it from their group’s exam page with their usual password.'),
+        h('p', { class: 'small muted' }, 'To change it or see its results: Teacher Dashboard → 📝 Official Exams → Manage exams on that group’s row.'),
+        h('div', { class: 'row', style: 'justify-content:flex-end' }, h('button', { class: 'btn btn-primary', onclick: () => m.close() }, 'OK')));
+    } }, 'Copy exam');
+    put(box, h('p', { class: 'small', style: 'margin-top:0' }, 'The students of a group sign in to exams in their group’s own place. This copies the exam and its ' + (e.questionIds || []).length + ' question(s) there. Later changes here do not change the copy.'),
+      h('label', { class: 'f' }, h('span', null, 'Copy to'), pick),
+      h('label', { class: 'chk' }, pub, h('span', null, 'Publish it there at once (same times, duration and access code)' + (e.status === 'published' ? '' : ' — only for exams that are published here'))),
+      msg, h('div', { class: 'row', style: 'justify-content:flex-end' }, h('button', { class: 'btn', onclick: () => m.close() }, 'Cancel'), go));
   },
   async saveExam(e) { const r = await this.call('examUpsert', { exam: e }); if (!r.ok) toast(r.error, 'bad'); else toast('Saved.'); return r; },
   async deleteExam(e) {
@@ -762,15 +787,19 @@ const Teacher = {
     const df = h('select', null, h('option', { value: '' }, 'All levels'), [1, 2, 3].map(k => h('option', { value: String(k) }, 'D' + k + ' — ' + DIFF[k])));
     let shown = [];
     const sel = new Set(); const tbody = h('tbody'); const delBtn = h('button', { class: 'btn btn-sm btn-danger', disabled: true }, 'Delete selected');
+    const updSel = () => { delBtn.disabled = toTBtn.disabled = !sel.size; delBtn.textContent = 'Delete selected (' + sel.size + ')'; toTBtn.textContent = '📤 To a teaching bank (' + sel.size + ')'; allHead.checked = !!shown.length && shown.every(q => sel.has(q.id)); };
+    const selAll = h('button', { class: 'btn btn-sm', title: 'Tick every question shown with the current topic / type / level / search', onclick: () => { shown.forEach(q => sel.add(q.id)); paint(); } }, '☑ Select all shown');
+    const selNone = h('button', { class: 'btn btn-sm', onclick: () => { sel.clear(); paint(); } }, 'Clear selection');
+    const allHead = h('input', { type: 'checkbox', 'aria-label': 'Select all shown', title: 'Select all shown', onchange: () => { shown.forEach(q => { if (allHead.checked) sel.add(q.id); else sel.delete(q.id); }); paint(); } });
     const toTBtn = h('button', { class: 'btn btn-sm', disabled: true, title: 'Copy (or move) the selected questions into a teaching question bank, where students can practise them', onclick: () => this.toTeaching(this.bank.filter(q => sel.has(q.id))) }, '📤 To a teaching bank');
     const modT = q => q.source && q.source.course && q.source.course !== BASE ? ((CONFIG.modules[q.source.course] || {}).title || q.source.course) + ' · ' : '';
     const src = q => q.source && q.source.kind === 'course' ? h('span', { class: 'badge' }, modT(q) + 'course ' + (q.source.origId || '')) : q.source && q.source.kind === 'imported' ? h('span', { class: 'badge' }, modT(q) + 'imported') : q.source && q.source.kind === 'exambank' ? h('span', { class: 'badge' }, modT(q) + 'exam bank copy') : h('span', { class: 'badge teal', title: 'Written only for official exams — never part of Revision' }, modT(q) + 'exam-only');
     const paint = () => {
       const fv = f.value.toLowerCase(), tv = t.value, pv = tp.value, dv = df.value;
       const rows = shown = this.bank.filter(q => typeOk(q, tv) && (!pv || (q.topic || '(no topic)') === pv) && (!dv || String(q.difficulty) === dv) && (!fv || (q.stem + ' ' + (q.case || '') + ' ' + (q.topic || '')).toLowerCase().includes(fv)));
-      put(tbody, ...rows.map((q, i) => { const c = h('input', { type: 'checkbox', checked: sel.has(q.id), 'aria-label': 'Select', onchange: () => { if (c.checked) sel.add(q.id); else sel.delete(q.id); delBtn.disabled = toTBtn.disabled = !sel.size; delBtn.textContent = 'Delete selected (' + sel.size + ')'; toTBtn.textContent = '📤 To a teaching bank (' + sel.size + ')'; } });
+      put(tbody, ...rows.map((q, i) => { const c = h('input', { type: 'checkbox', checked: sel.has(q.id), 'aria-label': 'Select', onchange: () => { if (c.checked) sel.add(q.id); else sel.delete(q.id); updSel(); } });
         return h('tr', null, h('td', null, c), h('td', null, h('span', { class: 'badge' }, TYPE_LABEL[q.type])), h('td', null, diffBadge(q)), h('td', null, q.stem.slice(0, 200), q.image ? qThumb(q.image) : ''), h('td', { class: 'small muted' }, q.topic || ''), h('td', null, src(q)), h('td', null, h('button', { class: 'btn btn-sm', onclick: () => this.editQuestion(q) }, 'Edit'))); }));
-      cntEl.textContent = rows.length + ' shown';
+      cntEl.textContent = rows.length + ' shown'; updSel();
       if (!rows.length) tbody.append(h('tr', null, h('td', { colspan: 7, class: 'muted' }, this.bank.length ? 'No question matches.' : 'This exam bank is empty. Fill it with ⇆ Copy from another exam bank (for example the normal link’s bank, topic by topic), + Add from the course question bank, 🖼 Picture questions, or write / import questions.')));
     };
     const cntEl = h('span', { class: 'small muted' });
@@ -786,8 +815,8 @@ const Teacher = {
       h('p', { class: 'muted small', style: 'margin-top:0' }, 'Private: these questions and their answers are never sent to students’ browsers except as an answer-free exam paper. ' + counts.map(x => x[1] + ' ' + TYPE_LABEL[x[0]]).join(' · ')),
       h('div', { class: 'row', style: 'margin:10px 0 14px' }, h('button', { class: 'btn btn-primary', onclick: () => this.pickFromCourse() }, BASE === 'exams' ? '+ Add from a module’s teaching question bank' : '+ Add from the course question bank'), h('button', { class: 'btn', onclick: () => this.copyFromBank() }, '⇆ Copy from another exam bank'), h('button', { class: 'btn', onclick: () => this.editQuestion(null) }, '+ Write a new question'), h('button', { class: 'btn', onclick: () => this.pictureQuestions() }, '🖼 Picture questions (practical)'), h('button', { class: 'btn', onclick: () => this.importJson() }, 'Import (file / JSON / Claude)'), h('button', { class: 'btn', onclick: () => printAnswerKey(shown, 'Official exam bank — ' + MOD.title) }, '🖨 Print answer key (shown)')),
       dist,
-      h('div', { class: 'card' }, h('div', { class: 'row', style: 'margin-bottom:10px' }, h('div', { class: 'grow', style: 'min-width:200px' }, f), h('div', { style: 'width:230px' }, tp), h('div', { style: 'width:170px' }, t), h('div', { style: 'width:160px' }, df), cntEl, toTBtn, delBtn),
-        h('div', { class: 'tscroll' }, h('table', { class: 't' }, h('thead', null, h('tr', null, h('th', null, ''), h('th', null, 'Type'), h('th', null, 'Level'), h('th', null, 'Question'), h('th', null, 'Topic'), h('th', null, 'Source'), h('th', null, ''))), tbody))));
+      h('div', { class: 'card' }, h('div', { class: 'row', style: 'margin-bottom:10px' }, h('div', { class: 'grow', style: 'min-width:200px' }, f), h('div', { style: 'width:230px' }, tp), h('div', { style: 'width:170px' }, t), h('div', { style: 'width:160px' }, df), cntEl, selAll, selNone, toTBtn, delBtn),
+        h('div', { class: 'tscroll' }, h('table', { class: 't' }, h('thead', null, h('tr', null, h('th', null, allHead), h('th', null, 'Type'), h('th', null, 'Level'), h('th', null, 'Question'), h('th', null, 'Topic'), h('th', null, 'Source'), h('th', null, ''))), tbody))));
     paint();
   },
   editQuestion(q0) {
